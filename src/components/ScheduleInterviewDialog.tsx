@@ -113,11 +113,11 @@ export default function ScheduleInterviewDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] h-[calc(100vh-200px)] overflow-auto">
+      <DialogContent className="sm:max-w-[500px] w-[95vw] sm:w-auto h-[85vh] sm:h-[calc(100vh-200px)] overflow-auto sm:rounded-md rounded-lg p-0">
         <DialogHeader>
           <DialogTitle>Schedule Interview</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 px-4 sm:px-0">
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
             <Input placeholder="Interview title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
@@ -183,14 +183,14 @@ export default function ScheduleInterviewDialog({ open, onOpenChange }: Props) {
                 />
               </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <TimePicker label="Start time" value={formData.startTime} onChange={(v) => setFormData({ ...formData, startTime: v })} stepMinutes={5} />
               <TimePicker label="End time" value={formData.endTime} onChange={(v) => setFormData({ ...formData, endTime: v })} stepMinutes={5} />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={scheduleMeeting} disabled={isCreating}>
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button className="w-full sm:w-auto" onClick={scheduleMeeting} disabled={isCreating}>
               {isCreating ? (<><Loader2Icon className="mr-2 size-4 animate-spin" />Scheduling...</>) : ("Schedule Interview")}
             </Button>
           </div>
