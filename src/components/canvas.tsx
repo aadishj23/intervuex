@@ -15,6 +15,11 @@ export default function DrawingCanvas() {
   const [textInput, setTextInput] = useState('');
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const textInputRef = useRef<HTMLInputElement>(null);
+  
+  // Selection state
+  const [selectedElement, setSelectedElement] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const colors = [
     '#000000', '#EF4444', '#F59E0B', '#10B981', 
@@ -32,13 +37,19 @@ export default function DrawingCanvas() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw all elements
-    elements.forEach(el => drawElement(ctx, el));
+    elements.forEach((el, index) => {
+      drawElement(ctx, el);
+      // Draw selection border if element is selected
+      if (index === selectedElement) {
+        drawSelectionBorder(ctx, el);
+      }
+    });
     
     // Draw current element being created
     if (currentElement) {
       drawElement(ctx, currentElement);
     }
-  }, [elements, currentElement]);
+  }, [elements, currentElement, selectedElement]);
 
   // Focus text input when it appears
   useEffect(() => {
@@ -48,6 +59,147 @@ export default function DrawingCanvas() {
       }, 10);
     }
   }, [isTyping]);
+
+  const drawSelectionBorder = (ctx: CanvasRenderingContext2D, element: any) => {
+    ctx.strokeStyle = '#3B82F6';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    
+    const bounds = getElementBounds(element);
+    if (bounds) {
+      ctx.strokeRect(
+        bounds.x - 5,
+        bounds.y - 5,
+        bounds.width + 10,
+        bounds.height + 10
+      );
+    }
+    
+    ctx.setLineDash([]);
+  };
+
+  const getElementBounds = (element: any) => {
+    switch (element.type) {
+      case 'pencil':
+        if (!element.points || element.points.length === 0) return null;
+        let minX = element.points[0].x;
+        let minY = element.points[0].y;
+        let maxX = element.points[0].x;
+        let maxY = element.points[0].y;
+        
+        element.points.forEach((point: any) => {
+          minX = Math.min(minX, point.x);
+          minY = Math.min(minY, point.y);
+          maxX = Math.max(maxX, point.x);
+          maxY = Math.max(maxY, point.y);
+        });
+        
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      
+      case 'line':
+        return {
+          x: Math.min(element.x1, element.x2),
+          y: Math.min(element.y1, element.y2),
+          width: Math.abs(element.x2 - element.x1),
+          height: Math.abs(element.y2 - element.y1)
+        };
+      
+      case 'rectangle':
+        return {
+          x: element.x,
+          y: element.y,
+          width: Math.abs(element.width),
+          height: Math.abs(element.height)
+        };
+      
+      case 'circle':
+        const radius = Math.sqrt(
+          Math.pow(element.x2 - element.x1, 2) + 
+          Math.pow(element.y2 - element.y1, 2)
+        );
+        return {
+          x: element.x1 - radius,
+          y: element.y1 - radius,
+          width: radius * 2,
+          height: radius * 2
+        };
+      
+      case 'text':
+        // Approximate text bounds
+        const textWidth = element.text.length * 12;
+        const textHeight = element.fontSize || 20;
+        return {
+          x: element.x,
+          y: element.y - textHeight,
+          width: textWidth,
+          height: textHeight
+        };
+      
+      default:
+        return null;
+    }
+  };
+
+  const isPointInElement = (point: { x: number; y: number }, element: any) => {
+    const bounds = getElementBounds(element);
+    if (!bounds) return false;
+    
+    return (
+      point.x >= bounds.x &&
+      point.x <= bounds.x + bounds.width &&
+      point.y >= bounds.y &&
+      point.y <= bounds.y + bounds.height
+    );
+  };
+
+  const findElementAtPoint = (point: { x: number; y: number }) => {
+    // Search from top to bottom (last drawn element first)
+    for (let i = elements.length - 1; i >= 0; i--) {
+      if (isPointInElement(point, elements[i])) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  const moveElement = (element: any, dx: number, dy: number) => {
+    const movedElement = { ...element };
+    
+    switch (element.type) {
+      case 'pencil':
+        movedElement.points = element.points.map((point: any) => ({
+          x: point.x + dx,
+          y: point.y + dy
+        }));
+        break;
+      
+      case 'line':
+        movedElement.x1 += dx;
+        movedElement.y1 += dy;
+        movedElement.x2 += dx;
+        movedElement.y2 += dy;
+        break;
+      
+      case 'rectangle':
+        movedElement.x += dx;
+        movedElement.y += dy;
+        break;
+      
+      case 'circle':
+        movedElement.x1 += dx;
+        movedElement.y1 += dy;
+        movedElement.x2 += dx;
+        movedElement.y2 += dy;
+        break;
+      
+      case 'text':
+        movedElement.x += dx;
+        movedElement.y += dy;
+        break;
+    }
+    
+    return movedElement;
+  };
 
   const drawElement = (ctx: CanvasRenderingContext2D, element: any) => {
     ctx.strokeStyle = element.color || '#000';
@@ -119,9 +271,31 @@ export default function DrawingCanvas() {
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (tool === 'select' || tool === 'text') return;
-    
     const pos = getMousePos(e);
+    
+    if (tool === 'select') {
+      // Find element at click position
+      const elementIndex = findElementAtPoint(pos);
+      setSelectedElement(elementIndex);
+      
+      if (elementIndex !== null) {
+        const element = elements[elementIndex];
+        const bounds = getElementBounds(element);
+        if (bounds) {
+          setDragOffset({
+            x: pos.x - bounds.x,
+            y: pos.y - bounds.y
+          });
+          setIsDragging(true);
+        }
+      }
+      return;
+    }
+    
+    if (tool === 'text') return;
+    
+    // Clear selection when using other tools
+    setSelectedElement(null);
     setIsDrawing(true);
     
     if (tool === 'pencil') {
@@ -147,9 +321,24 @@ export default function DrawingCanvas() {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !currentElement) return;
-    
     const pos = getMousePos(e);
+    
+    // Handle dragging selected element
+    if (tool === 'select' && isDragging && selectedElement !== null) {
+      const element = elements[selectedElement];
+      const bounds = getElementBounds(element);
+      if (bounds) {
+        const dx = pos.x - dragOffset.x - bounds.x;
+        const dy = pos.y - dragOffset.y - bounds.y;
+        
+        const updatedElements = [...elements];
+        updatedElements[selectedElement] = moveElement(element, dx, dy);
+        setElements(updatedElements);
+      }
+      return;
+    }
+    
+    if (!isDrawing || !currentElement) return;
     
     if (tool === 'pencil') {
       setCurrentElement({
@@ -174,12 +363,32 @@ export default function DrawingCanvas() {
   };
 
   const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false);
+    }
+    
     if (isDrawing && currentElement) {
       setElements([...elements, currentElement]);
       setCurrentElement(null);
     }
     setIsDrawing(false);
   };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Delete selected element with Delete or Backspace key
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement !== null && !isTyping) {
+      const updatedElements = elements.filter((_, index) => index !== selectedElement);
+      setElements(updatedElements);
+      setSelectedElement(null);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedElement, elements, isTyping]);
 
   const handleTextSubmit = () => {
     if (textInput.trim()) {
@@ -209,7 +418,6 @@ export default function DrawingCanvas() {
   };
 
   const handleTextBlur = () => {
-    // Small delay to allow click events to process
     setTimeout(() => {
       if (isTyping) {
         handleTextSubmit();
@@ -222,25 +430,41 @@ export default function DrawingCanvas() {
     setCurrentElement(null);
     setIsTyping(false);
     setTextInput('');
+    setSelectedElement(null);
+  };
+
+  const deleteSelected = () => {
+    if (selectedElement !== null) {
+      const updatedElements = elements.filter((_, index) => index !== selectedElement);
+      setElements(updatedElements);
+      setSelectedElement(null);
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Toolbar */}
+      {/* Toolbar */}
       <div className="flex items-center gap-2 p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <button
-          onClick={() => setTool('select')}
+          onClick={() => {
+            setTool('select');
+            setSelectedElement(null);
+          }}
           className={`p-2 rounded transition-colors ${
             tool === 'select' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
-          title="Select"
+          title="Select & Move (Click to select, drag to move)"
         >
           <Move size={20} />
         </button>
         <button
-          onClick={() => setTool('pencil')}
+          onClick={() => {
+            setTool('pencil');
+            setSelectedElement(null);
+          }}
           className={`p-2 rounded transition-colors ${
             tool === 'pencil' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
@@ -251,7 +475,10 @@ export default function DrawingCanvas() {
           <Pencil size={20} />
         </button>
         <button
-          onClick={() => setTool('line')}
+          onClick={() => {
+            setTool('line');
+            setSelectedElement(null);
+          }}
           className={`p-2 rounded transition-colors ${
             tool === 'line' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
@@ -262,7 +489,10 @@ export default function DrawingCanvas() {
           <Minus size={20} />
         </button>
         <button
-          onClick={() => setTool('rectangle')}
+          onClick={() => {
+            setTool('rectangle');
+            setSelectedElement(null);
+          }}
           className={`p-2 rounded transition-colors ${
             tool === 'rectangle' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
@@ -273,7 +503,10 @@ export default function DrawingCanvas() {
           <Square size={20} />
         </button>
         <button
-          onClick={() => setTool('circle')}
+          onClick={() => {
+            setTool('circle');
+            setSelectedElement(null);
+          }}
           className={`p-2 rounded transition-colors ${
             tool === 'circle' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
@@ -286,7 +519,8 @@ export default function DrawingCanvas() {
         <button
           onClick={() => {
             setTool('text');
-            setIsTyping(false); // Reset typing state when selecting text tool
+            setIsTyping(false);
+            setSelectedElement(null);
           }}
           className={`p-2 rounded transition-colors ${
             tool === 'text' 
@@ -325,10 +559,26 @@ export default function DrawingCanvas() {
           <Trash2 size={20} />
         </button>
 
+        {/* Delete Selected button - only show when something is selected */}
+        {selectedElement !== null && (
+          <>
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+            <button
+              onClick={deleteSelected}
+              className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white text-sm transition-colors"
+              title="Delete Selected (or press Delete key)"
+            >
+              Delete Selected
+            </button>
+          </>
+        )}
+
         {/* Tool indicator */}
         <div className="ml-auto text-sm text-gray-600 dark:text-gray-400">
-          Current tool: <span className="font-semibold capitalize">{tool}</span>
-          {tool === 'text' && ' (Click on canvas to add text)'}
+          <span className="font-semibold capitalize">{tool}</span>
+          {tool === 'text' && ' - Click canvas to add text'}
+          {tool === 'select' && ' - Click to select, drag to move'}
+          {selectedElement !== null && ' - Element selected'}
         </div>
       </div>
 
@@ -344,7 +594,7 @@ export default function DrawingCanvas() {
             height={1080}
             className={`bg-white shadow-lg ${
               tool === 'text' ? 'cursor-text' : 
-              tool === 'select' ? 'cursor-move' : 
+              tool === 'select' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 
               'cursor-crosshair'
             }`}
             onClick={handleCanvasClick}
@@ -385,6 +635,16 @@ export default function DrawingCanvas() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Instructions Panel */}
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+        <div className="text-xs text-gray-600 dark:text-gray-400 flex gap-4 flex-wrap">
+          <span>• <strong>Select:</strong> Click elements to select, drag to move</span>
+          <span>• <strong>Delete:</strong> Select element and press Delete key</span>
+          <span>• <strong>Draw:</strong> Click and drag with drawing tools</span>
+          <span>• <strong>Text:</strong> Click to place text</span>
         </div>
       </div>
     </div>
