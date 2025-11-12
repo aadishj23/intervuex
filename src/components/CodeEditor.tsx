@@ -4,7 +4,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resiz
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { AlertCircleIcon, BookIcon, LightbulbIcon } from "lucide-react";
+import { AlertCircleIcon, BookIcon, Brush, LightbulbIcon } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useCall } from "@stream-io/video-react-sdk";
 import { useMutation, useQuery } from "convex/react";
@@ -12,6 +12,7 @@ import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { CardDescription } from "./ui/card";
 import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
 
 function CodeEditor() {
   const call = useCall();
@@ -121,7 +122,10 @@ function CodeEditor() {
   };
 
   return (
-    <ResizablePanelGroup direction="vertical" className="min-h-[calc-100vh-4rem-1px]">
+    <ResizablePanelGroup
+      direction="vertical"
+      className="min-h-[calc-100vh-4rem-1px]"
+    >
       {/* QUESTION SECTION */}
       <ResizablePanel>
         <ScrollArea className="h-full">
@@ -139,8 +143,11 @@ function CodeEditor() {
                     Choose your language and solve the problem
                   </p>
                 </div>
-              <div className="flex items-center gap-3">
-                  <Select value={selectedQuestion.id} onValueChange={handleQuestionChange}>
+                <div className="flex items-center gap-3">
+                  <Select
+                    value={selectedQuestion.id}
+                    onValueChange={handleQuestionChange}
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Select question" />
                     </SelectTrigger>
@@ -159,7 +166,10 @@ function CodeEditor() {
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <img
-                            src={LANGUAGES.find((l) => l.id === language)?.icon || `/${language}.png`}
+                            src={
+                              LANGUAGES.find((l) => l.id === language)?.icon ||
+                              `/${language}.png`
+                            }
                             alt={language}
                             className="w-5 h-5 object-contain"
                           />
@@ -186,6 +196,12 @@ function CodeEditor() {
                   <Button onClick={runCode} disabled={isRunning}>
                     {isRunning ? "Running..." : "Run code"}
                   </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/canvas" target="_blank">
+                      <Brush className="w-4 h-4 mr-2" />
+                      Open Canvas
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
@@ -197,7 +213,9 @@ function CodeEditor() {
                 </CardHeader>
                 <CardContent className="text-sm leading-relaxed">
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <p className="whitespace-pre-line">{selectedQuestion.description}</p>
+                    <p className="whitespace-pre-line">
+                      {selectedQuestion.description}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -213,7 +231,9 @@ function CodeEditor() {
                     <div className="p-4 space-y-4">
                       {selectedQuestion.examples.map((example, index) => (
                         <div key={index} className="space-y-2">
-                          <p className="font-medium text-sm">Example {index + 1}:</p>
+                          <p className="font-medium text-sm">
+                            Example {index + 1}:
+                          </p>
                           <ScrollArea className="h-full w-full rounded-md">
                             <pre className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
                               <div>Input: {example.input}</div>
@@ -269,19 +289,19 @@ function CodeEditor() {
             language={language}
             theme="vs-dark"
             value={code}
-          onChange={async (value) => {
-            const newCode = value || "";
-            setCode(newCode);
-            if (streamCallId) {
-              // debounce-like minimal: fire-and-forget
-              void upsert({
-                streamCallId,
-                language,
-                questionId: selectedQuestion.id,
-                code: newCode,
-              });
-            }
-          }}
+            onChange={async (value) => {
+              const newCode = value || "";
+              setCode(newCode);
+              if (streamCallId) {
+                // debounce-like minimal: fire-and-forget
+                void upsert({
+                  streamCallId,
+                  language,
+                  questionId: selectedQuestion.id,
+                  code: newCode,
+                });
+              }
+            }}
             options={{
               minimap: { enabled: false },
               fontSize: 18,
@@ -308,7 +328,9 @@ function CodeEditor() {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-48 w-full rounded-md border">
-                <pre className="p-3 text-sm whitespace-pre-wrap break-words">{output}</pre>
+                <pre className="p-3 text-sm whitespace-pre-wrap break-words">
+                  {output}
+                </pre>
                 <ScrollBar />
               </ScrollArea>
             </CardContent>
