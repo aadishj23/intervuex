@@ -1,13 +1,20 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Pencil, Square, Circle, Move, Trash2, Minus, Type, Eraser, Undo, Redo } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Pencil, Square, Circle, Move, Trash2, Minus, Type, Eraser, Undo, Redo } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export default function DrawingCanvas() {
+type DrawingCanvasProps = {
+  className?: string;
+  isActive?: boolean;
+  isEmbedded?: boolean;
+};
+
+export default function DrawingCanvas({ className, isActive = true, isEmbedded = false }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const [tool, setTool] = useState('pencil');
-  const [color, setColor] = useState('#000000');
+  const [tool, setTool] = useState("pencil");
+  const [color, setColor] = useState("#000000");
   const [isDrawing, setIsDrawing] = useState(false);
   const [elements, setElements] = useState<any[]>([]);
   const [currentElement, setCurrentElement] = useState<any>(null);
@@ -26,11 +33,17 @@ export default function DrawingCanvas() {
   const [historyStep, setHistoryStep] = useState(0);
   
   // Eraser state
-  const [eraserPath, setEraserPath] = useState<{x: number, y: number}[]>([]);
+  const [eraserPath, setEraserPath] = useState<{ x: number; y: number }[]>([]);
 
   const colors = [
-    '#000000', '#EF4444', '#F59E0B', '#10B981', 
-    '#3B82F6', '#8B5CF6', '#EC4899', '#ffffff'
+    "#000000",
+    "#EF4444",
+    "#F59E0B",
+    "#10B981",
+    "#3B82F6",
+    "#8B5CF6",
+    "#EC4899",
+    "#ffffff",
   ];
 
   // Update history when elements change (but not from undo/redo)
@@ -45,11 +58,11 @@ export default function DrawingCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     
     // Clear canvas with white background
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw all elements
@@ -65,21 +78,7 @@ export default function DrawingCanvas() {
     if (currentElement) {
       drawElement(ctx, currentElement);
     }
-    
-    // Draw eraser preview
-    if (tool === 'eraser' && eraserPath.length > 0) {
-      ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-      ctx.lineWidth = 20;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(eraserPath[0].x, eraserPath[0].y);
-      eraserPath.forEach(point => {
-        ctx.lineTo(point.x, point.y);
-      });
-      ctx.stroke();
-    }
-  }, [elements, currentElement, selectedElement, eraserPath, tool]);
+  }, [elements, currentElement, selectedElement]);
 
   // Focus text input when it appears
   useEffect(() => {
@@ -92,31 +91,35 @@ export default function DrawingCanvas() {
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
+    if (!isActive) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Undo: Ctrl+Z or Cmd+Z
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isTyping) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey && !isTyping) {
         e.preventDefault();
         undo();
       }
       // Redo: Ctrl+Y or Cmd+Y or Ctrl+Shift+Z or Cmd+Shift+Z
-      if (((e.ctrlKey || e.metaKey) && e.key === 'y') || 
-          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key === "y") ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z")
+      ) {
         if (!isTyping) {
           e.preventDefault();
           redo();
         }
       }
       // Delete selected element
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement !== null && !isTyping) {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedElement !== null && !isTyping) {
         deleteSelected();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [historyStep, history, selectedElement, isTyping]);
+  }, [historyStep, history, selectedElement, isTyping, isActive]);
 
   const undo = () => {
     if (historyStep > 0) {
@@ -555,7 +558,13 @@ export default function DrawingCanvas() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div
+      className={cn(
+        "flex flex-col bg-gray-50 dark:bg-gray-900",
+        isEmbedded ? "h-full" : (className ?? "h-screen min-h-[540px]")
+      )}
+      aria-hidden={!isActive}
+    >
       {/* Toolbar */}
       <div className="flex items-center gap-2 p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         {/* Undo/Redo buttons */}
@@ -743,16 +752,16 @@ export default function DrawingCanvas() {
       <div className="flex-1 overflow-auto relative bg-gray-100 dark:bg-gray-900 p-4">
         <div 
           ref={canvasContainerRef}
-          className="relative inline-block"
+          className="relative inline-block w-full h-full"
         >
           <canvas
             ref={canvasRef}
-            width={1920}
-            height={1080}
-            className={`bg-white shadow-lg ${
+            width={isEmbedded ? 1600 : 1920}
+            height={isEmbedded ? 900 : 1080}
+            className={`bg-white shadow-lg ${isEmbedded ? 'w-full h-full' : ''} ${
               tool === 'text' ? 'cursor-text' : 
               tool === 'select' ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') :
-              tool === 'eraser' ? 'cursor-crosshair' : 
+              tool === 'eraser' ? 'cursor-cell' : 
               'cursor-crosshair'
             }`}
             onClick={handleCanvasClick}
@@ -796,17 +805,19 @@ export default function DrawingCanvas() {
         </div>
       </div>
 
-            {/* Instructions Panel */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
-        <div className="text-xs text-gray-600 dark:text-gray-400 flex gap-4 flex-wrap">
-          <span>• <strong>Undo/Redo:</strong> Ctrl+Z / Ctrl+Y</span>
-          <span>• <strong>Select:</strong> Click elements to select, drag to move</span>
-          <span>• <strong>Eraser:</strong> Click and drag to erase elements</span>
-          <span>• <strong>Delete:</strong> Select element and press Delete key</span>
-          <span>• <strong>Draw:</strong> Click and drag with drawing tools</span>
-          <span>• <strong>Text:</strong> Click to place text</span>
+      {/* Instructions Panel */}
+      {!isEmbedded && (
+        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+          <div className="text-xs text-gray-600 dark:text-gray-400 flex gap-4 flex-wrap">
+            <span>• <strong>Undo/Redo:</strong> Ctrl+Z / Ctrl+Y</span>
+            <span>• <strong>Select:</strong> Click elements to select, drag to move</span>
+            <span>• <strong>Eraser:</strong> Click and drag to erase elements</span>
+            <span>• <strong>Delete:</strong> Select element and press Delete key</span>
+            <span>• <strong>Draw:</strong> Click and drag with drawing tools</span>
+            <span>• <strong>Text:</strong> Click to place text</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -38,4 +38,19 @@ export default defineSchema({
     updatedBy: v.string(),
     updatedAt: v.number(),
   }).index("by_stream_call_id", ["streamCallId"]),
+
+  customProblems: defineTable({
+    title: v.string(),
+    description: v.string(),
+    examples: v.array(
+      v.object({
+        input: v.string(),
+        output: v.string(),
+        explanation: v.optional(v.string()),
+      })
+    ),
+    constraints: v.optional(v.array(v.string())),
+    createdBy: v.string(), // interviewer clerkId
+    createdAt: v.number(),
+  }).index("by_creator", ["createdBy"]),
 });

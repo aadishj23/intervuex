@@ -39,7 +39,7 @@ function MeetingRoom() {
   return (
     <div className="h-[calc(100vh-4rem-1px)]">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={35} minSize={25} maxSize={100} className="relative">
+        <ResizablePanel defaultSize={25} minSize={20} maxSize={35} className="relative">
           {/* VIDEO LAYOUT */}
           <div className="absolute inset-0">
             {layout === "grid" ? <PaginatedGridLayout /> : <SpeakerLayout />}
@@ -94,7 +94,7 @@ function MeetingRoom() {
 
         <ResizableHandle withHandle />
 
-        <ResizablePanel defaultSize={65} minSize={25}>
+        <ResizablePanel defaultSize={75} minSize={25}>
           <CodeEditor />
         </ResizablePanel>
       </ResizablePanelGroup>
