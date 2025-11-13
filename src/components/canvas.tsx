@@ -3,6 +3,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Pencil, Square, Circle, Move, Trash2, Minus, Type, Eraser, Undo, Redo } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCall } from "@stream-io/video-react-sdk";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
 
 type DrawingCanvasProps = {
   className?: string;
@@ -11,6 +15,8 @@ type DrawingCanvasProps = {
 };
 
 export default function DrawingCanvas({ className, isActive = true, isEmbedded = false }: DrawingCanvasProps) {
+  const call = useCall();
+  const { user } = useUser();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [tool, setTool] = useState("pencil");
@@ -35,6 +41,11 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
   // Eraser state
   const [eraserPath, setEraserPath] = useState<{ x: number; y: number }[]>([]);
 
+  // Convex sync
+  const streamCallId = call?.id || "";
+  const canvasState = useQuery(api.canvas.getCanvasStateByCallId, streamCallId ? { streamCallId } : "skip");
+  const upsertCanvas = useMutation(api.canvas.upsertCanvasState);
+
   const colors = [
     "#000000",
     "#EF4444",
@@ -46,6 +57,26 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
     "#ffffff",
   ];
 
+  // Load canvas state from database when joining
+  useEffect(() => {
+    if (!canvasState || !streamCallId) return;
+    // Ignore echoes from our own updates
+    if (canvasState.updatedBy && user?.id && canvasState.updatedBy === user.id) return;
+    
+    try {
+      const loadedElements = JSON.parse(canvasState.elements);
+      if (Array.isArray(loadedElements) && JSON.stringify(loadedElements) !== JSON.stringify(elements)) {
+        setElements(loadedElements);
+        // Update history with loaded elements
+        const newHistory = [...history, loadedElements];
+        setHistory(newHistory);
+        setHistoryStep(newHistory.length - 1);
+      }
+    } catch (e) {
+      console.error("Failed to parse canvas state:", e);
+    }
+  }, [canvasState, user?.id, streamCallId]);
+
   // Update history when elements change (but not from undo/redo)
   const updateHistory = (newElements: any[]) => {
     const newHistory = history.slice(0, historyStep + 1);
@@ -53,6 +84,14 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
     setHistory(newHistory);
     setHistoryStep(newHistory.length - 1);
     setElements(newElements);
+    
+    // Sync to database
+    if (streamCallId) {
+      void upsertCanvas({
+        streamCallId,
+        elements: JSON.stringify(newElements),
+      });
+    }
   };
 
   useEffect(() => {

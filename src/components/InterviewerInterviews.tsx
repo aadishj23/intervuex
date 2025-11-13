@@ -19,7 +19,7 @@ type Interview = Doc<"interviews">;
 
 export default function InterviewerInterviews() {
   const users = useQuery(api.users.getUsers);
-  const interviews = useQuery(api.interviews.getAllInterviews);
+  const interviews = useQuery(api.interviews.getMyInterviewsAsInterviewer);
   const updateStatus = useMutation(api.interviews.updateInterviewStatus);
 
   const handleStatusUpdate = async (interviewId: Id<"interviews">, status: string) => {

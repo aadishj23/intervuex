@@ -113,11 +113,11 @@ export default function ScheduleInterviewDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] w-[95vw] sm:w-auto h-[85vh] sm:h-[calc(100vh-200px)] overflow-auto sm:rounded-md rounded-lg p-0">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[500px] sm:w-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
+        <DialogHeader className="px-4 sm:px-6 pt-6">
           <DialogTitle>Schedule Interview</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4 px-4 sm:px-0">
+        <div className="space-y-4 px-4 sm:px-6 pb-6">
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
             <Input placeholder="Interview title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
@@ -143,49 +143,61 @@ export default function ScheduleInterviewDialog({ open, onOpenChange }: Props) {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Interviewers</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {selectedInterviewers.map((interviewer) => (
-                <div key={interviewer.clerkId} className="inline-flex items-center gap-2 bg-secondary px-2 py-1 rounded-md text-sm">
-                  <UserInfo user={interviewer} />
-                  {interviewer.clerkId !== user?.id && (
-                    <button onClick={() => removeInterviewer(interviewer.clerkId)} className="hover:text-destructive transition-colors">
-                      <XIcon className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {availableInterviewers.length > 0 && (
-              <Select onValueChange={addInterviewer}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Add interviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableInterviewers.map((interviewer) => (
+            {selectedInterviewers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-md bg-muted/30">
+                {selectedInterviewers.map((interviewer) => (
+                  <div key={interviewer.clerkId} className="inline-flex items-center gap-2 bg-background border px-3 py-1.5 rounded-md text-sm shadow-sm">
+                    <UserInfo user={interviewer} />
+                    {interviewer.clerkId !== user?.id && (
+                      <button 
+                        onClick={() => removeInterviewer(interviewer.clerkId)} 
+                        className="hover:text-destructive transition-colors ml-1"
+                        type="button"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <Select onValueChange={addInterviewer} value="">
+              <SelectTrigger>
+                <SelectValue placeholder={availableInterviewers.length > 0 ? "Add another interviewer" : "No other interviewers available"} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableInterviewers.length > 0 ? (
+                  availableInterviewers.map((interviewer) => (
                     <SelectItem key={interviewer.clerkId} value={interviewer.clerkId}>
                       <UserInfo user={interviewer} />
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>No other interviewers available</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Date</label>
-              <div className="w-full flex justify-center">
+              <div className="w-full flex justify-center overflow-hidden">
                 <Calendar
                   mode="single"
                   selected={formData.date}
                   onSelect={(date) => date && setFormData({ ...formData, date })}
                   disabled={(date) => date < new Date()}
-                  className="mx-auto"
+                  className="mx-auto scale-90 sm:scale-100"
                 />
               </div>
             </div>
-            <div className="flex gap-4">
-              <TimePicker label="Start time" value={formData.startTime} onChange={(v) => setFormData({ ...formData, startTime: v })} stepMinutes={5} />
-              <TimePicker label="End time" value={formData.endTime} onChange={(v) => setFormData({ ...formData, endTime: v })} stepMinutes={5} />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <TimePicker label="Start time" value={formData.startTime} onChange={(v) => setFormData({ ...formData, startTime: v })} stepMinutes={5} />
+              </div>
+              <div className="flex-1">
+                <TimePicker label="End time" value={formData.endTime} onChange={(v) => setFormData({ ...formData, endTime: v })} stepMinutes={5} />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">

@@ -26,6 +26,21 @@ export const getMyInterviews = query({
   },
 });
 
+export const getMyInterviewsAsInterviewer = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    // Get all interviews where the current user is in the interviewerIds array
+    const allInterviews = await ctx.db.query("interviews").collect();
+    const myInterviews = allInterviews.filter((interview) =>
+      interview.interviewerIds.includes(identity.subject)
+    );
+
+    return myInterviews;
+  },
+});
+
 export const getInterviewByStreamCallId = query({
   args: { streamCallId: v.string() },
   handler: async (ctx, args) => {

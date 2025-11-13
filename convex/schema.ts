@@ -6,7 +6,7 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     image: v.optional(v.string()),
-    role: v.union(v.literal("candidate"), v.literal("interviewer")),
+    role: v.optional(v.union(v.literal("candidate"), v.literal("interviewer"))),
     clerkId: v.string(),
   }).index("by_clerk_id", ["clerkId"]),
 
@@ -53,4 +53,11 @@ export default defineSchema({
     createdBy: v.string(), // interviewer clerkId
     createdAt: v.number(),
   }).index("by_creator", ["createdBy"]),
+
+  canvasStates: defineTable({
+    streamCallId: v.string(),
+    elements: v.string(), // JSON stringified array of drawing elements
+    updatedBy: v.string(),
+    updatedAt: v.number(),
+  }).index("by_stream_call_id", ["streamCallId"]),
 });

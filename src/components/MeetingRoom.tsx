@@ -38,32 +38,32 @@ function MeetingRoom() {
 
   return (
     <div className="h-[calc(100vh-4rem-1px)]">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={35} className="relative">
-          {/* VIDEO LAYOUT */}
+      {/* Mobile Layout - Vertical Stack */}
+      <div className="md:hidden flex flex-col h-full">
+        {/* Video Section - Top 30% on mobile */}
+        <div className="h-[30vh] relative border-b">
           <div className="absolute inset-0">
             {layout === "grid" ? <PaginatedGridLayout /> : <SpeakerLayout />}
 
             {/* PARTICIPANTS LIST OVERLAY */}
             {showParticipants && (
-              <div className="absolute right-0 top-0 h-full w-[300px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="absolute right-0 top-0 h-full w-[250px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <CallParticipantsList onClose={() => setShowParticipants(false)} />
               </div>
             )}
           </div>
 
-          {/* VIDEO CONTROLS */}
-
-          <div className="absolute bottom-4 left-0 right-0">
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2 flex-wrap justify-center px-4">
+          {/* VIDEO CONTROLS - Mobile */}
+          <div className="absolute bottom-2 left-0 right-0">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-1 flex-wrap justify-center px-2">
                 <CallControls onLeave={() => router.push("/")} />
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="size-10">
-                        <LayoutListIcon className="size-4" />
+                      <Button variant="outline" size="icon" className="size-8">
+                        <LayoutListIcon className="size-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -79,10 +79,10 @@ function MeetingRoom() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="size-10"
+                    className="size-8"
                     onClick={() => setShowParticipants(!showParticipants)}
                   >
-                    <UsersIcon className="size-4" />
+                    <UsersIcon className="size-3.5" />
                   </Button>
 
                   <EndCallButton />
@@ -90,14 +90,76 @@ function MeetingRoom() {
               </div>
             </div>
           </div>
-        </ResizablePanel>
+        </div>
 
-        <ResizableHandle withHandle />
-
-        <ResizablePanel defaultSize={75} minSize={25}>
+        {/* Code Editor Section - Bottom 70% on mobile */}
+        <div className="flex-1 overflow-hidden">
           <CodeEditor />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Horizontal Resizable */}
+      <div className="hidden md:block h-full">
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel defaultSize={25} minSize={20} maxSize={35} className="relative">
+            {/* VIDEO LAYOUT */}
+            <div className="absolute inset-0">
+              {layout === "grid" ? <PaginatedGridLayout /> : <SpeakerLayout />}
+
+              {/* PARTICIPANTS LIST OVERLAY */}
+              {showParticipants && (
+                <div className="absolute right-0 top-0 h-full w-[300px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                  <CallParticipantsList onClose={() => setShowParticipants(false)} />
+                </div>
+              )}
+            </div>
+
+            {/* VIDEO CONTROLS */}
+            <div className="absolute bottom-4 left-0 right-0">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 flex-wrap justify-center px-4">
+                  <CallControls onLeave={() => router.push("/")} />
+
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="size-10">
+                          <LayoutListIcon className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setLayout("grid")}>
+                          Grid View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLayout("speaker")}>
+                          Speaker View
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-10"
+                      onClick={() => setShowParticipants(!showParticipants)}
+                    >
+                      <UsersIcon className="size-4" />
+                    </Button>
+
+                    <EndCallButton />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          <ResizablePanel defaultSize={75} minSize={25}>
+            <CodeEditor />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
     </div>
   );
 }
