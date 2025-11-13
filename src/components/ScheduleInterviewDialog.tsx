@@ -183,14 +183,14 @@ export default function ScheduleInterviewDialog({ open, onOpenChange }: Props) {
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex gap-4">
               <TimePicker label="Start time" value={formData.startTime} onChange={(v) => setFormData({ ...formData, startTime: v })} stepMinutes={5} />
               <TimePicker label="End time" value={formData.endTime} onChange={(v) => setFormData({ ...formData, endTime: v })} stepMinutes={5} />
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button className="w-full sm:w-auto" onClick={scheduleMeeting} disabled={isCreating}>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={scheduleMeeting} disabled={isCreating}>
               {isCreating ? (<><Loader2Icon className="mr-2 size-4 animate-spin" />Scheduling...</>) : ("Schedule Interview")}
             </Button>
           </div>

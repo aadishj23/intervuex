@@ -104,9 +104,15 @@ export default function Home() {
       {/* ) : ( */}
         {isInterviewer ? (
           <div className="pt-8 space-y-6">
+<<<<<<< HEAD
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-3xl font-bold text-center sm:text-left w-full">Interviews</h2>
               <Button className="w-full sm:w-auto" onClick={() => setShowScheduleDialog(true)}>Schedule Interview</Button>
+=======
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold">Interviews</h2>
+              <Button onClick={() => setShowScheduleDialog(true)}>Schedule Interview</Button>
+>>>>>>> feature-canvas
             </div>
             <ScheduleInterviewDialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog} />
             <InterviewerInterviews />

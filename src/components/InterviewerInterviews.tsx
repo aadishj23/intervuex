@@ -81,8 +81,8 @@ export default function InterviewerInterviews() {
 
                     <CardFooter className="p-4 pt-0 flex flex-col gap-3">
                       {interview.status === "upcoming" && (
-                        <div className="flex flex-col sm:flex-row gap-2 w-full">
-                          <Link href={`/meeting/${interview.streamCallId}`} className="sm:flex-1">
+                        <div className="flex gap-2 w-full">
+                          <Link href={`/meeting/${interview.streamCallId}`} className="flex-1">
                             <Button className="w-full">Start now</Button>
                           </Link>
                           <Button
