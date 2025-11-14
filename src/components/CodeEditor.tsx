@@ -158,56 +158,58 @@ function CodeEditor() {
   return (
     <div className="h-full flex flex-col">
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="border-b bg-background px-4">
-          <TabsList className="h-12 w-full justify-start rounded-none border-b-0 bg-transparent p-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="border-b bg-background px-2 sm:px-4 flex-shrink-0">
+          <TabsList className="h-11 sm:h-12 w-full justify-start rounded-none border-b-0 bg-transparent p-0">
             <TabsTrigger 
               value="description" 
-              className="relative h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-3 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="relative h-11 sm:h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-2 sm:px-4 pb-2 sm:pb-3 pt-2 sm:pt-3 font-semibold text-xs sm:text-sm text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
             >
-              <BookIcon className="w-4 h-4 mr-2" />
-              Description
+              <BookIcon className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Description</span>
+              <span className="sm:hidden">Desc</span>
             </TabsTrigger>
             <TabsTrigger 
               value="code" 
-              className="relative h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-3 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="relative h-11 sm:h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-2 sm:px-4 pb-2 sm:pb-3 pt-2 sm:pt-3 font-semibold text-xs sm:text-sm text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
             >
-              <Code2 className="w-4 h-4 mr-2" />
-              Code Editor
+              <Code2 className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Code Editor</span>
+              <span className="sm:hidden">Code</span>
             </TabsTrigger>
             <TabsTrigger 
               value="canvas" 
-              className="relative h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-3 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="relative h-11 sm:h-12 rounded-none border-b-2 border-b-transparent bg-transparent px-2 sm:px-4 pb-2 sm:pb-3 pt-2 sm:pt-3 font-semibold text-xs sm:text-sm text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
             >
-              <Palette className="w-4 h-4 mr-2" />
-              Canvas
+              <Palette className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span>Canvas</span>
             </TabsTrigger>
           </TabsList>
         </div>
 
         {/* DESCRIPTION TAB */}
-        <TabsContent value="description" className="flex-1 m-0 border-0 p-0 data-[state=inactive]:hidden">
-          <ScrollArea className="h-full">
-            <div className="p-6">
-              <div className="max-w-4xl mx-auto space-y-6">
+        <TabsContent value="description" className="flex-1 min-h-0 flex flex-col m-0 border-0 p-0 data-[state=inactive]:hidden">
+          <ScrollArea className="flex-1 w-full">
+            <div className="p-3 sm:p-6">
+              <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
                 {/* HEADER */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:gap-4">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-semibold tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
                       {selectedQuestion.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Read the problem description carefully
                     </p>
                   </div>
                   {isInterviewer && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <CreateProblemDialog />
                       <Select
                         value={selectedQuestion.id}
                         onValueChange={handleQuestionChange}
                       >
-                        <SelectTrigger className="w-[200px]">
+                        <SelectTrigger className="w-full sm:w-[200px]">
                           <SelectValue placeholder="Select question" />
                         </SelectTrigger>
                         <SelectContent>
@@ -224,13 +226,13 @@ function CodeEditor() {
 
                 {/* PROBLEM DESC. */}
                 <Card>
-                  <CardHeader className="flex flex-row items-center gap-2">
-                    <BookIcon className="h-5 w-5 text-primary/80" />
-                    <CardTitle>Problem Description</CardTitle>
+                  <CardHeader className="flex flex-row items-center gap-2 p-4 sm:p-6">
+                    <BookIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary/80 flex-shrink-0" />
+                    <CardTitle className="text-base sm:text-lg">Problem Description</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-sm leading-relaxed">
+                  <CardContent className="text-sm leading-relaxed p-4 sm:p-6 pt-0">
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <p className="whitespace-pre-line">
+                      <p className="whitespace-pre-line break-words">
                         {selectedQuestion.description}
                       </p>
                     </div>
@@ -239,22 +241,22 @@ function CodeEditor() {
 
                 {/* PROBLEM EXAMPLES */}
                 <Card>
-                  <CardHeader className="flex flex-row items-center gap-2">
-                    <LightbulbIcon className="h-5 w-5 text-yellow-500" />
-                    <CardTitle>Examples</CardTitle>
+                  <CardHeader className="flex flex-row items-center gap-2 p-4 sm:p-6">
+                    <LightbulbIcon className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 flex-shrink-0" />
+                    <CardTitle className="text-base sm:text-lg">Examples</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                  <CardContent className="p-4 sm:p-6 pt-0">
+                    <div className="space-y-3 sm:space-y-4">
                       {selectedQuestion.examples.map((example, index) => (
                         <div key={index} className="space-y-2">
-                          <p className="font-medium text-sm">
+                          <p className="font-medium text-xs sm:text-sm">
                             Example {index + 1}:
                           </p>
-                          <pre className="bg-muted/50 p-3 rounded-lg text-sm font-mono overflow-x-auto">
-                            <div>Input: {example.input}</div>
-                            <div>Output: {example.output}</div>
+                          <pre className="bg-muted/50 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto">
+                            <div className="break-words whitespace-pre-wrap">Input: {example.input}</div>
+                            <div className="break-words whitespace-pre-wrap">Output: {example.output}</div>
                             {example.explanation && (
-                              <div className="pt-2 text-muted-foreground">
+                              <div className="pt-2 text-muted-foreground break-words whitespace-pre-wrap">
                                 Explanation: {example.explanation}
                               </div>
                             )}
@@ -268,14 +270,14 @@ function CodeEditor() {
                 {/* CONSTRAINTS */}
                 {selectedQuestion.constraints && (
                   <Card>
-                    <CardHeader className="flex flex-row items-center gap-2">
-                      <AlertCircleIcon className="h-5 w-5 text-blue-500" />
-                      <CardTitle>Constraints</CardTitle>
+                    <CardHeader className="flex flex-row items-center gap-2 p-4 sm:p-6">
+                      <AlertCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
+                      <CardTitle className="text-base sm:text-lg">Constraints</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="list-disc list-inside space-y-1.5 text-sm marker:text-muted-foreground">
+                    <CardContent className="p-4 sm:p-6 pt-0">
+                      <ul className="list-disc list-inside space-y-1.5 text-xs sm:text-sm marker:text-muted-foreground">
                         {selectedQuestion.constraints.map((constraint, index) => (
-                          <li key={index} className="text-muted-foreground">
+                          <li key={index} className="text-muted-foreground break-words">
                             {constraint}
                           </li>
                         ))}

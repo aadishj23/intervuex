@@ -605,118 +605,118 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
       aria-hidden={!isActive}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-2 p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="flex flex-wrap items-center gap-1 sm:gap-2 p-2 sm:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         {/* Undo/Redo buttons */}
         <button
           onClick={undo}
           disabled={historyStep === 0}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             historyStep === 0
               ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Undo (Ctrl+Z)"
         >
-          <Undo size={20} />
+          <Undo size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={redo}
           disabled={historyStep === history.length - 1}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             historyStep === history.length - 1
               ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Redo (Ctrl+Y)"
         >
-          <Redo size={20} />
+          <Redo size={18} className="sm:w-5 sm:h-5" />
         </button>
         
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+        <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
         
         <button
           onClick={() => {
             setTool('select');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'select' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
-          title="Select & Move (Click to select, drag to move)"
+          title="Select & Move"
         >
-          <Move size={20} />
+          <Move size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
             setTool('pencil');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'pencil' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Pencil"
         >
-          <Pencil size={20} />
+          <Pencil size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
             setTool('eraser');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'eraser' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Eraser"
         >
-          <Eraser size={20} />
+          <Eraser size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
             setTool('line');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'line' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Line"
         >
-          <Minus size={20} />
+          <Minus size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
             setTool('rectangle');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'rectangle' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Rectangle"
         >
-          <Square size={20} />
+          <Square size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
             setTool('circle');
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'circle' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Circle"
         >
-          <Circle size={20} />
+          <Circle size={18} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => {
@@ -724,26 +724,26 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
             setIsTyping(false);
             setSelectedElement(null);
           }}
-          className={`p-2 rounded transition-colors ${
+          className={`p-1.5 sm:p-2 rounded transition-colors ${
             tool === 'text' 
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
               : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
           title="Text"
         >
-          <Type size={20} />
+          <Type size={18} className="sm:w-5 sm:h-5" />
         </button>
         
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+        <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
         
         {/* Color Picker - disabled for eraser */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {colors.map((c) => (
             <button
               key={c}
               onClick={() => setColor(c)}
               disabled={tool === 'eraser'}
-              className={`w-8 h-8 rounded border-2 hover:scale-110 transition-transform ${
+              className={`w-6 h-6 sm:w-8 sm:h-8 rounded border-2 hover:scale-110 transition-transform ${
                 tool === 'eraser' ? 'opacity-50 cursor-not-allowed' :
                 color === c ? 'border-blue-500 dark:border-blue-400 scale-110' : 'border-gray-300 dark:border-gray-600'
               }`}
@@ -753,32 +753,33 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
           ))}
         </div>
         
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+        <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
         
         <button
           onClick={clearCanvas}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+          className="p-1.5 sm:p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
           title="Clear Canvas"
         >
-          <Trash2 size={20} />
+          <Trash2 size={18} className="sm:w-5 sm:h-5" />
         </button>
 
         {/* Delete Selected button */}
         {selectedElement !== null && (
           <>
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
+            <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
             <button
               onClick={deleteSelected}
-              className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white text-sm transition-colors"
+              className="px-2 py-1 sm:px-3 sm:py-1.5 rounded bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm transition-colors"
               title="Delete Selected (or press Delete key)"
             >
-              Delete Selected
+              <span className="hidden sm:inline">Delete Selected</span>
+              <span className="sm:hidden">Delete</span>
             </button>
           </>
         )}
 
         {/* Tool indicator */}
-        <div className="ml-auto text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+        <div className="hidden md:flex ml-auto text-sm text-gray-600 dark:text-gray-400 items-center gap-2">
           <span className="font-semibold capitalize">{tool}</span>
           {tool === 'text' && <span className="text-xs">Click canvas to add text</span>}
           {tool === 'select' && <span className="text-xs">Click to select, drag to move</span>}
@@ -788,7 +789,7 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
       </div>
 
       {/* Canvas Container */}
-      <div className="flex-1 overflow-auto relative bg-gray-100 dark:bg-gray-900 p-4">
+      <div className="flex-1 overflow-auto relative bg-gray-100 dark:bg-gray-900 p-2 sm:p-4">
         <div 
           ref={canvasContainerRef}
           className="relative inline-block w-full h-full"
@@ -827,16 +828,17 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyDown={handleTextKeyDown}
                 onBlur={handleTextBlur}
-                className="border-2 border-blue-500 px-2 py-1 outline-none bg-white dark:bg-gray-800 dark:text-white rounded shadow-lg"
+                className="border-2 border-blue-500 px-2 py-1 outline-none bg-white dark:bg-gray-800 dark:text-white rounded shadow-lg text-sm sm:text-base"
                 style={{
                   color: color === '#ffffff' ? '#000000' : color,
-                  fontSize: '20px',
-                  minWidth: '200px'
+                  fontSize: '16px',
+                  minWidth: '150px',
+                  maxWidth: '90vw'
                 }}
-                placeholder="Type text and press Enter..."
+                placeholder="Type text..."
                 autoFocus
               />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Press Enter to confirm, Esc to cancel
               </div>
             </div>
@@ -846,14 +848,14 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
 
       {/* Instructions Panel */}
       {!isEmbedded && (
-        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
-          <div className="text-xs text-gray-600 dark:text-gray-400 flex gap-4 flex-wrap">
-            <span>• <strong>Undo/Redo:</strong> Ctrl+Z / Ctrl+Y</span>
-            <span>• <strong>Select:</strong> Click elements to select, drag to move</span>
-            <span>• <strong>Eraser:</strong> Click and drag to erase elements</span>
-            <span>• <strong>Delete:</strong> Select element and press Delete key</span>
-            <span>• <strong>Draw:</strong> Click and drag with drawing tools</span>
-            <span>• <strong>Text:</strong> Click to place text</span>
+        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 sm:px-4 py-2">
+          <div className="text-xs text-gray-600 dark:text-gray-400 flex gap-2 sm:gap-4 flex-wrap">
+            <span className="hidden sm:inline">• <strong>Undo/Redo:</strong> Ctrl+Z / Ctrl+Y</span>
+            <span>• <strong>Select:</strong> Click to select &amp; drag</span>
+            <span className="hidden sm:inline">• <strong>Eraser:</strong> Click and drag to erase</span>
+            <span>• <strong>Delete:</strong> Press Delete key</span>
+            <span className="hidden md:inline">• <strong>Draw:</strong> Click and drag with tools</span>
+            <span className="hidden md:inline">• <strong>Text:</strong> Click to place text</span>
           </div>
         </div>
       )}
