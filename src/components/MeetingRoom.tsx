@@ -277,8 +277,8 @@ function MeetingRoom() {
           <CodeEditor />
           
           {/* Floating Meeting Controls - Mobile */}
-          <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
-            <div className="bg-background/95 backdrop-blur-md rounded-2xl border shadow-2xl overflow-hidden">
+          <div className="absolute bottom-4 left-0 right-0 z-50 px-2 sm:px-4">
+            <div className="bg-background/95 backdrop-blur-md rounded-2xl border shadow-2xl overflow-hidden w-full max-w-full">
               {/* Minimize/Maximize Button */}
               <div className="flex justify-center py-1 border-b">
                 <Button
@@ -298,41 +298,45 @@ function MeetingRoom() {
               
               {/* Controls Content */}
               {!isControlsMinimized && (
-                <div className="p-3">
+                <div className="p-2 sm:p-3">
                   {/* Main Controls Row */}
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <CallControls onLeave={() => router.push("/")} />
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-3 mb-2 overflow-x-auto scrollbar-hide min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-3 min-w-fit">
+                      <CallControls onLeave={() => router.push("/")} />
+                    </div>
                   </div>
                   
                   {/* Secondary Controls Row */}
-                  <div className="flex items-center justify-center gap-2 pt-2 border-t">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="size-10">
-                          <LayoutListIcon className="size-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => setLayout("grid")}>
-                          Grid View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setLayout("speaker")}>
-                          Speaker View
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-2 border-t overflow-x-auto scrollbar-hide min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-fit">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="size-9 sm:size-10 shrink-0">
+                            <LayoutListIcon className="size-4 sm:size-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => setLayout("grid")}>
+                            Grid View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setLayout("speaker")}>
+                            Speaker View
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-10"
-                      onClick={() => setShowParticipants(!showParticipants)}
-                    >
-                      <UsersIcon className="size-5" />
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-9 sm:size-10 shrink-0"
+                        onClick={() => setShowParticipants(!showParticipants)}
+                      >
+                        <UsersIcon className="size-4 sm:size-5" />
+                      </Button>
 
-                    <div className="md:hidden">
-                      <EndCallButton />
+                      <div className="md:hidden shrink-0">
+                        <EndCallButton />
+                      </div>
                     </div>
                   </div>
                 </div>
