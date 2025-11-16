@@ -8,7 +8,7 @@ import {
   useCall,
 } from "@stream-io/video-react-sdk";
 import MobileVideoCarousel from "./MobileVideoCarousel";
-import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
@@ -94,13 +94,69 @@ function MeetingRoom() {
       console.log('Parsed event type:', eventType);
       console.log('Parsed event data:', eventData);
       
-      // Check if this is a fullscreen exit event
+      // Check if this is a fullscreen exit event or multiple screens detected
       const isFullscreenExit = 
         eventType === 'fullscreen_exit' || 
         eventData?.type === 'fullscreen_exit' ||
         event?.custom?.type === 'fullscreen_exit';
       
-      if (isFullscreenExit) {
+      const isMultipleScreens = 
+        eventType === 'multiple_screens_detected' || 
+        eventData?.type === 'multiple_screens_detected' ||
+        event?.custom?.type === 'multiple_screens_detected';
+      
+      const isSingleScreenRestored = 
+        eventType === 'single_screen_restored' || 
+        eventData?.type === 'single_screen_restored' ||
+        event?.custom?.type === 'single_screen_restored';
+      
+      if (isMultipleScreens) {
+        const userId = eventData?.userId || event.userId || event.custom?.userId || event.user?.id;
+        const userName = eventData?.userName || event.userName || event.custom?.userName || event.user?.name;
+        
+        const participants = call.state.participants || {};
+        const participant = Object.values(participants).find((p: any) => p.userId === userId);
+        const participantName = userName || 
+                               participant?.name || 
+                               event.user?.name || 
+                               participant?.userId || 
+                               userId || 
+                               'A candidate';
+        
+        console.log('🚫 Multiple screens detected for:', participantName);
+        
+        // Show toast notification to interviewer
+        toast.error(
+          `🚫 ${participantName} has multiple displays connected! This violates the interview requirements.`,
+          { 
+            duration: 10000,
+            icon: <AlertTriangle className="h-5 w-5" />
+          }
+        );
+      } else if (isSingleScreenRestored) {
+        const userId = eventData?.userId || event.userId || event.custom?.userId || event.user?.id;
+        const userName = eventData?.userName || event.userName || event.custom?.userName || event.user?.name;
+        
+        const participants = call.state.participants || {};
+        const participant = Object.values(participants).find((p: any) => p.userId === userId);
+        const participantName = userName || 
+                               participant?.name || 
+                               event.user?.name || 
+                               participant?.userId || 
+                               userId || 
+                               'A candidate';
+        
+        console.log('✅ Single screen restored for:', participantName);
+        
+        // Show toast notification to interviewer
+        toast.success(
+          `✅ ${participantName} has disconnected external displays and is now using a single screen.`,
+          { 
+            duration: 6000,
+            icon: <CheckCircle2 className="h-5 w-5" />
+          }
+        );
+      } else if (isFullscreenExit) {
         const exitCount = eventData?.exitCount || event.exitCount || event.custom?.exitCount || 0;
         const userId = eventData?.userId || event.userId || event.custom?.userId || event.user?.id;
         const userName = eventData?.userName || event.userName || event.custom?.userName || event.user?.name;

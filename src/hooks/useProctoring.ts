@@ -52,6 +52,53 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
   
   const fullscreenExitCountRef = useRef(0);
   const isEnteringFullscreenRef = useRef(false);
+  const hasMultipleScreensRef = useRef(false);
+
+  // Send custom event to notify about multiple screens detected
+  const notifyMultipleScreensDetected = useCallback(async () => {
+    if (!call) return;
+    
+    try {
+      const userId = localParticipant?.userId || call.state.localParticipant?.userId;
+      const userName = localParticipant?.name || call.state.localParticipant?.name || 'A participant';
+      
+      console.log('📤 Sending multiple screens detected event:', { userId, userName });
+      
+      await call.sendCustomEvent({
+        type: 'multiple_screens_detected',
+        timestamp: Date.now(),
+        userId,
+        userName,
+      });
+      
+      console.log('✅ Multiple screens detected event sent successfully');
+    } catch (error) {
+      console.error("Error sending multiple screens detected event:", error);
+    }
+  }, [call, localParticipant]);
+
+  // Send custom event to notify about single screen restored
+  const notifySingleScreenRestored = useCallback(async () => {
+    if (!call) return;
+    
+    try {
+      const userId = localParticipant?.userId || call.state.localParticipant?.userId;
+      const userName = localParticipant?.name || call.state.localParticipant?.name || 'A participant';
+      
+      console.log('📤 Sending single screen restored event:', { userId, userName });
+      
+      await call.sendCustomEvent({
+        type: 'single_screen_restored',
+        timestamp: Date.now(),
+        userId,
+        userName,
+      });
+      
+      console.log('✅ Single screen restored event sent successfully');
+    } catch (error) {
+      console.error("Error sending single screen restored event:", error);
+    }
+  }, [call, localParticipant]);
 
   // Detect number of screens
   const detectScreens = useCallback(async () => {
@@ -73,11 +120,43 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
             screens: screenDetails.screens 
           });
           
-          setState(prev => ({
-            ...prev,
-            screenCount,
-            hasMultipleScreens: hasMultiple,
-          }));
+          setState(prev => {
+            const wasMultiple = prev.hasMultipleScreens;
+            const isNowMultiple = hasMultiple;
+            
+            // If multiple screens detected after joining, trigger warning
+            if (isNowMultiple && !wasMultiple && enabled) {
+              console.error('🚫 MULTIPLE SCREENS DETECTED AFTER JOINING!');
+              toast.error(
+                '⚠️ Multiple displays detected! Please disconnect all external monitors. Only 1 screen is allowed.',
+                { duration: 10000 }
+              );
+              // Notify interviewer
+              if (call) {
+                notifyMultipleScreensDetected();
+              }
+            }
+            // If single screen restored (was multiple, now single)
+            else if (!isNowMultiple && wasMultiple && enabled) {
+              console.log('✅ SINGLE SCREEN RESTORED!');
+              toast.success(
+                '✅ Single display detected. Thank you for disconnecting external monitors.',
+                { duration: 5000 }
+              );
+              // Notify interviewer
+              if (call) {
+                notifySingleScreenRestored();
+              }
+            }
+            
+            hasMultipleScreensRef.current = isNowMultiple;
+            
+            return {
+              ...prev,
+              screenCount,
+              hasMultipleScreens: isNowMultiple,
+            };
+          });
           
           return { screenCount, hasMultiple };
         } catch (permissionError: any) {
@@ -107,11 +186,43 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
           
           console.log('✓ screen.isExtended result:', { screenCount, hasMultiple, isExtended });
           
-          setState(prev => ({
-            ...prev,
-            screenCount,
-            hasMultipleScreens: hasMultiple,
-          }));
+          setState(prev => {
+            const wasMultiple = prev.hasMultipleScreens;
+            const isNowMultiple = hasMultiple;
+            
+            // If multiple screens detected after joining, trigger warning
+            if (isNowMultiple && !wasMultiple && enabled) {
+              console.error('🚫 MULTIPLE SCREENS DETECTED AFTER JOINING!');
+              toast.error(
+                '⚠️ Multiple displays detected! Please disconnect all external monitors. Only 1 screen is allowed.',
+                { duration: 10000 }
+              );
+              // Notify interviewer
+              if (call) {
+                notifyMultipleScreensDetected();
+              }
+            }
+            // If single screen restored (was multiple, now single)
+            else if (!isNowMultiple && wasMultiple && enabled) {
+              console.log('✅ SINGLE SCREEN RESTORED!');
+              toast.success(
+                '✅ Single display detected. Thank you for disconnecting external monitors.',
+                { duration: 5000 }
+              );
+              // Notify interviewer
+              if (call) {
+                notifySingleScreenRestored();
+              }
+            }
+            
+            hasMultipleScreensRef.current = isNowMultiple;
+            
+            return {
+              ...prev,
+              screenCount,
+              hasMultipleScreens: isNowMultiple,
+            };
+          });
           
           return { screenCount, hasMultiple };
         } else {
@@ -172,11 +283,43 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
         method: 'aspect-ratio-heuristic'
       });
       
-      setState(prev => ({
-        ...prev,
-        screenCount,
-        hasMultipleScreens: hasMultiple,
-      }));
+      setState(prev => {
+        const wasMultiple = prev.hasMultipleScreens;
+        const isNowMultiple = hasMultiple;
+        
+        // If multiple screens detected after joining, trigger warning
+        if (isNowMultiple && !wasMultiple && enabled) {
+          console.error('🚫 MULTIPLE SCREENS DETECTED AFTER JOINING!');
+          toast.error(
+            '⚠️ Multiple displays detected! Please disconnect all external monitors. Only 1 screen is allowed.',
+            { duration: 10000 }
+          );
+          // Notify interviewer
+          if (call) {
+            notifyMultipleScreensDetected();
+          }
+        }
+        // If single screen restored (was multiple, now single)
+        else if (!isNowMultiple && wasMultiple && enabled) {
+          console.log('✅ SINGLE SCREEN RESTORED!');
+          toast.success(
+            '✅ Single display detected. Thank you for disconnecting external monitors.',
+            { duration: 5000 }
+          );
+          // Notify interviewer
+          if (call) {
+            notifySingleScreenRestored();
+          }
+        }
+        
+        hasMultipleScreensRef.current = isNowMultiple;
+        
+        return {
+          ...prev,
+          screenCount,
+          hasMultipleScreens: isNowMultiple,
+        };
+      });
       
       return { screenCount, hasMultiple };
       
@@ -191,7 +334,7 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
       }));
       return { screenCount: 2, hasMultiple: true };
     }
-  }, []);
+  }, [enabled, call, notifyMultipleScreensDetected, notifySingleScreenRestored]);
 
   // Request fullscreen
   const enterFullscreen = useCallback(async () => {
