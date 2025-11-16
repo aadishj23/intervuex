@@ -5,10 +5,11 @@ import {
   PaginatedGridLayout,
   SpeakerLayout,
   useCallStateHooks,
+  useCall,
 } from "@stream-io/video-react-sdk";
-import { LayoutListIcon, LoaderIcon, UsersIcon } from "lucide-react";
+import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import {
   DropdownMenu,
@@ -19,14 +20,88 @@ import {
 import { Button } from "./ui/button";
 import EndCallButton from "./EndCallButton";
 import CodeEditor from "./CodeEditor";
+import { useProctoring } from "@/hooks/useProctoring";
+import { useUserRole } from "@/hooks/useUserRole";
+import FullscreenExitWarning from "./FullscreenExitWarning";
+import toast from "react-hot-toast";
 
 function MeetingRoom() {
   const router = useRouter();
   const [layout, setLayout] = useState<"grid" | "speaker">("speaker");
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
+  const [fullscreenExitEvents, setFullscreenExitEvents] = useState<Map<string, number>>(new Map());
+  
   const { useCallCallingState } = useCallStateHooks();
+  const call = useCall();
+  const { isCandidate, isInterviewer } = useUserRole();
 
   const callingState = useCallCallingState();
+
+  const { 
+    enterFullscreen, 
+    isFullscreen, 
+    fullscreenExitCount 
+  } = useProctoring({ 
+    enabled: isCandidate,
+    onFullscreenExit: (exitCount) => {
+      setShowFullscreenWarning(true);
+      // Warning will stay until user manually re-enters fullscreen
+      // (due to browser security, automatic re-entry is not possible)
+    }
+  });
+
+  // Hide warning when user returns to fullscreen
+  useEffect(() => {
+    if (isFullscreen && showFullscreenWarning) {
+      console.log('✓ User returned to fullscreen - hiding warning');
+      setShowFullscreenWarning(false);
+    }
+  }, [isFullscreen, showFullscreenWarning]);
+
+  // Auto-enter fullscreen when meeting starts (candidates only)
+  useEffect(() => {
+    if (callingState === CallingState.JOINED && isCandidate) {
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        enterFullscreen();
+      }, 500);
+    }
+  }, [callingState, isCandidate, enterFullscreen]);
+
+  // Listen for fullscreen exit events from candidates (for interviewers to see)
+  useEffect(() => {
+    if (!call || !isInterviewer) return;
+
+    const handleCustomEvent = (event: any) => {
+      if (event.type === 'fullscreen_exit') {
+        const participantName = event.user?.name || 'A participant';
+        const exitCount = event.data?.exitCount || 0;
+        
+        // Update the exit events map
+        setFullscreenExitEvents(prev => {
+          const newMap = new Map(prev);
+          newMap.set(event.user?.id || 'unknown', exitCount);
+          return newMap;
+        });
+
+        // Show toast notification to interviewer
+        toast.error(
+          `⚠️ ${participantName} exited fullscreen mode (${exitCount} time${exitCount > 1 ? 's' : ''})`,
+          { 
+            duration: 6000,
+            icon: <AlertTriangle className="h-5 w-5" />
+          }
+        );
+      }
+    };
+
+    call.on('custom', handleCustomEvent);
+
+    return () => {
+      call.off('custom', handleCustomEvent);
+    };
+  }, [call, isInterviewer]);
 
   if (callingState !== CallingState.JOINED) {
     return (
@@ -38,6 +113,25 @@ function MeetingRoom() {
 
   return (
     <div className="h-[calc(100vh-4rem-1px)]">
+      {/* Fullscreen Warning Overlay - Candidates Only */}
+      {isCandidate && showFullscreenWarning && (
+        <FullscreenExitWarning 
+          exitCount={fullscreenExitCount}
+          onEnterFullscreen={enterFullscreen}
+        />
+      )}
+
+      {/* Fullscreen Status Indicator - Interviewer View */}
+      {isInterviewer && fullscreenExitEvents.size > 0 && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm">
+            <AlertTriangle className="h-4 w-4" />
+            <span>
+              Candidate left fullscreen {Array.from(fullscreenExitEvents.values())[0]} time(s)
+            </span>
+          </div>
+        </div>
+      )}
       {/* Mobile Layout - Vertical Stack */}
       <div className="md:hidden flex flex-col h-full">
         {/* Video Section - Top 30% on mobile */}
@@ -47,7 +141,7 @@ function MeetingRoom() {
 
             {/* PARTICIPANTS LIST OVERLAY */}
             {showParticipants && (
-              <div className="absolute right-0 top-0 h-full w-[250px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="absolute right-0 top-0 h-full w-[250px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
                 <CallParticipantsList onClose={() => setShowParticipants(false)} />
               </div>
             )}
@@ -108,7 +202,7 @@ function MeetingRoom() {
 
               {/* PARTICIPANTS LIST OVERLAY */}
               {showParticipants && (
-                <div className="absolute right-0 top-0 h-full w-[300px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="absolute right-0 top-0 h-full w-[300px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
                   <CallParticipantsList onClose={() => setShowParticipants(false)} />
                 </div>
               )}
