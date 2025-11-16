@@ -386,14 +386,32 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
     }
   };
 
-  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+    
+    // Get client coordinates (works for both mouse and touch)
+    const clientX = 'touches' in e && e.touches.length > 0 
+      ? e.touches[0].clientX 
+      : 'clientX' in e 
+        ? e.clientX 
+        : 0;
+    const clientY = 'touches' in e && e.touches.length > 0 
+      ? e.touches[0].clientY 
+      : 'clientY' in e 
+        ? e.clientY 
+        : 0;
+    
+    // Calculate the scale factor between displayed size and internal canvas size
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Get relative position and scale to canvas coordinates
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    return { x, y };
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -405,6 +423,25 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
       e.preventDefault();
       e.stopPropagation();
     }
+  };
+
+  const handleCanvasTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (tool === 'text') {
+      const pos = getMousePos(e);
+      setTextPosition(pos);
+      setIsTyping(true);
+      setTextInput('');
+      return;
+    }
+    // Convert touch event to mouse-like event for drawing
+    const touch = e.touches[0];
+    const mouseEvent = {
+      ...e,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    } as React.MouseEvent<HTMLCanvasElement>;
+    handleMouseDown(mouseEvent);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -461,7 +498,7 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
     }
   };
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const pos = getMousePos(e);
     
     // Handle dragging selected element
@@ -809,40 +846,71 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleCanvasTouchStart}
+            onTouchMove={(e) => {
+              e.preventDefault();
+              const touch = e.touches[0];
+              const mouseEvent = {
+                ...e,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+              } as React.MouseEvent<HTMLCanvasElement>;
+              handleMouseMove(mouseEvent);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleMouseUp();
+            }}
+            onTouchCancel={(e) => {
+              e.preventDefault();
+              handleMouseUp();
+            }}
           />
           
           {/* Text Input Overlay */}
-          {isTyping && (
-            <div
-              className="absolute"
-              style={{
-                left: `${textPosition.x}px`,
-                top: `${textPosition.y - 10}px`,
-                zIndex: 50
-              }}
-            >
-              <input
-                ref={textInputRef}
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                onKeyDown={handleTextKeyDown}
-                onBlur={handleTextBlur}
-                className="border-2 border-blue-500 px-2 py-1 outline-none bg-white dark:bg-gray-800 dark:text-white rounded shadow-lg text-sm sm:text-base"
+          {isTyping && (() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return null;
+            const rect = canvas.getBoundingClientRect();
+            
+            // Convert canvas coordinates back to display coordinates
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+            const displayX = textPosition.x * scaleX;
+            const displayY = textPosition.y * scaleY;
+            
+            return (
+              <div
+                className="absolute"
                 style={{
-                  color: color === '#ffffff' ? '#000000' : color,
-                  fontSize: '16px',
-                  minWidth: '150px',
-                  maxWidth: '90vw'
+                  left: `${displayX}px`,
+                  top: `${displayY - 10}px`,
+                  zIndex: 50
                 }}
-                placeholder="Type text..."
-                autoFocus
-              />
-              <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Press Enter to confirm, Esc to cancel
+              >
+                <input
+                  ref={textInputRef}
+                  type="text"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  onKeyDown={handleTextKeyDown}
+                  onBlur={handleTextBlur}
+                  className="border-2 border-blue-500 px-3 py-2 outline-none bg-white text-gray-900 rounded-md shadow-xl text-sm sm:text-base backdrop-blur-sm"
+                  style={{
+                    color: color === '#ffffff' ? '#000000' : color,
+                    fontSize: '16px',
+                    minWidth: '150px',
+                    maxWidth: '90vw'
+                  }}
+                  placeholder="Type text..."
+                  autoFocus
+                />
+                <div className="hidden sm:block text-xs text-gray-500 mt-1 bg-white/90 px-2 py-1 rounded backdrop-blur-sm">
+                  Press Enter to confirm, Esc to cancel
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 

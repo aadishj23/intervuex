@@ -7,6 +7,7 @@ import {
   useCallStateHooks,
   useCall,
 } from "@stream-io/video-react-sdk";
+import MobileVideoCarousel from "./MobileVideoCarousel";
 import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -137,7 +138,7 @@ function MeetingRoom() {
         {/* Video Section - Top 30% on mobile */}
         <div className="h-[30vh] relative border-b">
           <div className="absolute inset-0">
-            {layout === "grid" ? <PaginatedGridLayout /> : <SpeakerLayout />}
+            <MobileVideoCarousel />
 
             {/* PARTICIPANTS LIST OVERLAY */}
             {showParticipants && (
