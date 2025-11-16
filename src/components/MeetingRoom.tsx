@@ -8,7 +8,7 @@ import {
   useCall,
 } from "@stream-io/video-react-sdk";
 import MobileVideoCarousel from "./MobileVideoCarousel";
-import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon } from "lucide-react";
+import { AlertTriangle, LayoutListIcon, LoaderIcon, UsersIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
@@ -32,6 +32,7 @@ function MeetingRoom() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
   const [fullscreenExitEvents, setFullscreenExitEvents] = useState<Map<string, number>>(new Map());
+  const [isControlsMinimized, setIsControlsMinimized] = useState(false);
   
   const { useCallCallingState } = useCallStateHooks();
   const call = useCall();
@@ -184,49 +185,75 @@ function MeetingRoom() {
               </div>
             )}
           </div>
-
-          {/* VIDEO CONTROLS - Mobile */}
-          <div className="absolute bottom-2 left-0 right-0">
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-center gap-1 flex-wrap justify-center px-2">
-                <CallControls onLeave={() => router.push("/")} />
-
-                <div className="flex items-center gap-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="size-8">
-                        <LayoutListIcon className="size-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => setLayout("grid")}>
-                        Grid View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLayout("speaker")}>
-                        Speaker View
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setShowParticipants(!showParticipants)}
-                  >
-                    <UsersIcon className="size-3.5" />
-                  </Button>
-
-                  <EndCallButton />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Code Editor Section - Bottom 70% on mobile */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative">
           <CodeEditor />
+          
+          {/* Floating Meeting Controls - Mobile */}
+          <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
+            <div className="bg-background/95 backdrop-blur-md rounded-2xl border shadow-2xl overflow-hidden">
+              {/* Minimize/Maximize Button */}
+              <div className="flex justify-center py-1 border-b">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setIsControlsMinimized(!isControlsMinimized)}
+                  aria-label={isControlsMinimized ? "Show controls" : "Hide controls"}
+                >
+                  {isControlsMinimized ? (
+                    <ChevronUp className="size-4" />
+                  ) : (
+                    <ChevronDown className="size-4" />
+                  )}
+                </Button>
+              </div>
+              
+              {/* Controls Content */}
+              {!isControlsMinimized && (
+                <div className="p-3">
+                  {/* Main Controls Row */}
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <CallControls onLeave={() => router.push("/")} />
+                  </div>
+                  
+                  {/* Secondary Controls Row */}
+                  <div className="flex items-center justify-center gap-2 pt-2 border-t">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="size-10">
+                          <LayoutListIcon className="size-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setLayout("grid")}>
+                          Grid View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLayout("speaker")}>
+                          Speaker View
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-10"
+                      onClick={() => setShowParticipants(!showParticipants)}
+                    >
+                      <UsersIcon className="size-5" />
+                    </Button>
+
+                    <div className="md:hidden">
+                      <EndCallButton />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

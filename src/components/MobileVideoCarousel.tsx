@@ -2,18 +2,33 @@
 
 import { useCallStateHooks, ParticipantView } from "@stream-io/video-react-sdk";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 export default function MobileVideoCarousel() {
-  const { useParticipants } = useCallStateHooks();
+  const { useParticipants, useLocalParticipant } = useCallStateHooks();
   const participants = useParticipants();
+  const localParticipant = useLocalParticipant();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Show all participants (they may have video, audio, or both)
-  const activeParticipants = participants;
+  // Combine local participant with other participants, ensuring local participant is included
+  const activeParticipants = useMemo(() => {
+    if (!localParticipant) return participants;
+    
+    // Check if local participant is already in the list
+    const hasLocalParticipant = participants.some(
+      (p) => p.sessionId === localParticipant.sessionId || p.userId === localParticipant.userId
+    );
+    
+    // If local participant is not in the list, add it at the beginning
+    if (!hasLocalParticipant) {
+      return [localParticipant, ...participants];
+    }
+    
+    return participants;
+  }, [participants, localParticipant]);
 
   useEffect(() => {
     // Reset to first participant if current index is out of bounds
@@ -69,6 +84,7 @@ export default function MobileVideoCarousel() {
       <div className="h-full w-full relative" style={{ backgroundColor: '#000' }}>
         <ParticipantView
           participant={activeParticipants[0]}
+          trackType="videoTrack"
         />
       </div>
     );
@@ -90,6 +106,7 @@ export default function MobileVideoCarousel() {
           >
             <ParticipantView
               participant={participant}
+              trackType="videoTrack"
             />
           </div>
         ))}

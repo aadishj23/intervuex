@@ -89,9 +89,30 @@ body {
 .str-video__participant-view {
   width: 100% !important;
   height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .str-video__video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.str-video__video-element {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+/* Ensure local participant video is visible */
+.str-video__participant-view[data-participant-type="local"] {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.str-video__participant-view[data-participant-type="local"] video {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover;

@@ -41,8 +41,13 @@ function EndCallButton() {
   };
 
   return (
-    <Button variant={"destructive"} onClick={endCall}>
-      End Meeting
+    <Button 
+      variant={"destructive"} 
+      onClick={endCall}
+      className="h-10 px-3 text-sm md:px-4 md:text-base"
+    >
+      <span className="md:inline">End Meeting</span>
+      <span className="md:hidden">End</span>
     </Button>
   );
 }
