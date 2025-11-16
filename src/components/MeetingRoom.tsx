@@ -86,9 +86,9 @@ function MeetingRoom() {
         const participants = call.state.participants || {};
         const participant = Object.values(participants).find((p: any) => p.userId === userId);
         const participantName = userName || 
-                               participant?.user?.name || 
+                               participant?.name || 
                                event.user?.name || 
-                               participant?.user?.id || 
+                               participant?.userId || 
                                userId || 
                                'A participant';
         
