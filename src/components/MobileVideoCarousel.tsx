@@ -66,17 +66,16 @@ export default function MobileVideoCarousel() {
 
   if (activeParticipants.length === 1) {
     return (
-      <div className="h-full w-full relative">
+      <div className="h-full w-full relative" style={{ backgroundColor: '#000' }}>
         <ParticipantView
           participant={activeParticipants[0]}
-          className="h-full w-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative" style={{ backgroundColor: '#000' }}>
       {/* Carousel Container */}
       <div
         ref={scrollContainerRef}
@@ -87,10 +86,10 @@ export default function MobileVideoCarousel() {
           <div
             key={participant.sessionId || participant.userId}
             className="h-full w-full flex-shrink-0 snap-center relative"
+            style={{ minWidth: '100%', maxWidth: '100%' }}
           >
             <ParticipantView
               participant={participant}
-              className="h-full w-full"
             />
           </div>
         ))}

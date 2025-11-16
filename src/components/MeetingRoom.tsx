@@ -72,15 +72,28 @@ function MeetingRoom() {
 
   // Listen for fullscreen exit events from candidates (for interviewers to see)
   useEffect(() => {
-    if (!call || !isInterviewer) return;
+    if (!call || !isInterviewer) {
+      console.log('Not setting up custom event listener:', { call: !!call, isInterviewer });
+      return;
+    }
+
+    console.log('Setting up custom event listener for interviewer');
 
     const handleCustomEvent = (event: any) => {
-      console.log('Custom event received:', event);
+      console.log('Custom event received by interviewer:', event);
+      console.log('Event type:', event.type);
+      console.log('Event keys:', Object.keys(event));
       
-      if (event.type === 'fullscreen_exit') {
-        const exitCount = event.data?.exitCount || 0;
-        const userId = event.data?.userId || event.userId || event.user?.id;
-        const userName = event.data?.userName || event.user?.name;
+      // Stream's custom events might have the data at the top level or nested
+      const eventType = event.type || event.event?.type;
+      const eventData = event.data || event.event || event;
+      
+      if (eventType === 'fullscreen_exit' || eventData?.type === 'fullscreen_exit') {
+        const exitCount = eventData.exitCount || event.exitCount || 0;
+        const userId = eventData.userId || event.userId || event.user?.id;
+        const userName = eventData.userName || event.userName || event.user?.name;
+        
+        console.log('Processing fullscreen exit:', { userId, userName, exitCount, eventData });
         
         // Get participant info from the call state as fallback
         const participants = call.state.participants || {};
@@ -90,13 +103,12 @@ function MeetingRoom() {
                                event.user?.name || 
                                participant?.userId || 
                                userId || 
-                               'A participant';
+                               'A candidate';
         
         console.log('Fullscreen exit event processed:', {
           userId,
           participantName,
           exitCount,
-          eventData: event.data,
           participant,
         });
         
@@ -118,10 +130,14 @@ function MeetingRoom() {
       }
     };
 
+    // Listen for custom events
     call.on('custom', handleCustomEvent);
+    
+    console.log('Custom event listener registered for interviewer');
 
     return () => {
       call.off('custom', handleCustomEvent);
+      console.log('Custom event listener removed for interviewer');
     };
   }, [call, isInterviewer]);
 
@@ -157,8 +173,8 @@ function MeetingRoom() {
       {/* Mobile Layout - Vertical Stack */}
       <div className="md:hidden flex flex-col h-full">
         {/* Video Section - Top 30% on mobile */}
-        <div className="h-[30vh] relative border-b">
-          <div className="absolute inset-0">
+        <div className="h-[30vh] relative border-b overflow-hidden">
+          <div className="absolute inset-0 w-full h-full">
             <MobileVideoCarousel />
 
             {/* PARTICIPANTS LIST OVERLAY */}

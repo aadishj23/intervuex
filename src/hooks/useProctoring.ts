@@ -268,15 +268,18 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
       console.log('Sending fullscreen exit event:', { userId, userName, exitCount });
       
       // Send custom event through Stream's sendCustomEvent
-      await call.sendCustomEvent({
+      // Stream expects the event in a specific format
+      const customEvent = {
         type: 'fullscreen_exit',
-        data: {
-          exitCount,
-          timestamp: Date.now(),
-          userId,
-          userName,
-        },
-      });
+        exitCount,
+        timestamp: Date.now(),
+        userId,
+        userName,
+      };
+      
+      console.log('Sending custom event with payload:', customEvent);
+      
+      await call.sendCustomEvent(customEvent);
       
       console.log('Fullscreen exit event sent successfully');
     } catch (error) {

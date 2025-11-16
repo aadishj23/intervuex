@@ -84,3 +84,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure Stream video elements render properly on mobile */
+.str-video__participant-view {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.str-video__video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
