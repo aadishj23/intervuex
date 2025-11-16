@@ -300,14 +300,14 @@ function MeetingRoom() {
               {!isControlsMinimized && (
                 <div className="p-2 sm:p-3">
                   {/* Main Controls Row */}
-                  <div className="flex items-center justify-center gap-1.5 sm:gap-3 mb-2 overflow-x-auto scrollbar-hide min-w-0">
+                  <div className="flex items-center justify-start gap-1.5 sm:gap-3 mb-2 overflow-x-auto scrollbar-hide min-w-0 -mx-2 sm:-mx-3 px-2 sm:px-3">
                     <div className="flex items-center gap-1.5 sm:gap-3 min-w-fit">
                       <CallControls onLeave={() => router.push("/")} />
                     </div>
                   </div>
                   
                   {/* Secondary Controls Row */}
-                  <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-2 border-t overflow-x-auto scrollbar-hide min-w-0">
+                  <div className="flex items-center justify-start gap-1.5 sm:gap-2 pt-2 border-t overflow-x-auto scrollbar-hide min-w-0 -mx-2 sm:-mx-3 px-2 sm:px-3">
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-fit">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
