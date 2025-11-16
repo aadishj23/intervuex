@@ -426,7 +426,12 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
   };
 
   const handleCanvasTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
+    // Only prevent default if it's a single touch (drawing), allow multi-touch for scrolling
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (tool === 'text') {
       const pos = getMousePos(e);
       setTextPosition(pos);
@@ -434,14 +439,145 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
       setTextInput('');
       return;
     }
-    // Convert touch event to mouse-like event for drawing
-    const touch = e.touches[0];
-    const mouseEvent = {
-      ...e,
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-    } as React.MouseEvent<HTMLCanvasElement>;
-    handleMouseDown(mouseEvent);
+    
+    // Only handle drawing if single touch
+    if (e.touches.length === 1) {
+      const pos = getMousePos(e);
+      handleTouchDown(pos);
+    }
+  };
+
+  const handleCanvasTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    // Only prevent default if it's a single touch (drawing)
+    if (e.touches.length === 1 && isDrawing) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pos = getMousePos(e);
+      handleTouchMove(pos);
+    }
+  };
+
+  const handleCanvasTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 0 && isDrawing) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleMouseUp();
+    }
+  };
+
+  const handleCanvasTouchCancel = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleMouseUp();
+    }
+  };
+
+  const handleTouchDown = (pos: { x: number; y: number }) => {
+    if (tool === 'select') {
+      const elementIndex = findElementAtPoint(pos);
+      setSelectedElement(elementIndex);
+      
+      if (elementIndex !== null) {
+        const element = elements[elementIndex];
+        const bounds = getElementBounds(element);
+        if (bounds) {
+          setDragOffset({
+            x: pos.x - bounds.x,
+            y: pos.y - bounds.y
+          });
+          setIsDragging(true);
+        }
+      }
+      return;
+    }
+    
+    if (tool === 'eraser') {
+      setIsDrawing(true);
+      setEraserPath([pos]);
+      return;
+    }
+    
+    if (tool === 'text') return;
+    
+    setSelectedElement(null);
+    setIsDrawing(true);
+    
+    if (tool === 'pencil') {
+      setCurrentElement({
+        type: 'pencil',
+        points: [pos],
+        color: color
+      });
+    } else {
+      setCurrentElement({
+        type: tool,
+        x1: pos.x,
+        y1: pos.y,
+        x2: pos.x,
+        y2: pos.y,
+        x: pos.x,
+        y: pos.y,
+        width: 0,
+        height: 0,
+        color: color
+      });
+    }
+  };
+
+  const handleTouchMove = (pos: { x: number; y: number }) => {
+    // Handle dragging selected element
+    if (tool === 'select' && isDragging && selectedElement !== null) {
+      const element = elements[selectedElement];
+      const bounds = getElementBounds(element);
+      if (bounds) {
+        const dx = pos.x - dragOffset.x - bounds.x;
+        const dy = pos.y - dragOffset.y - bounds.y;
+        
+        const updatedElements = [...elements];
+        updatedElements[selectedElement] = moveElement(element, dx, dy);
+        setElements(updatedElements);
+      }
+      return;
+    }
+    
+    // Handle eraser
+    if (tool === 'eraser' && isDrawing) {
+      setEraserPath([...eraserPath, pos]);
+      
+      // Check for elements to erase
+      const elementsToKeep = elements.filter(element => 
+        !isPathIntersectingElement(eraserPath, element)
+      );
+      
+      if (elementsToKeep.length !== elements.length) {
+        setElements(elementsToKeep);
+      }
+      return;
+    }
+    
+    if (!isDrawing || !currentElement) return;
+    
+    if (tool === 'pencil') {
+      setCurrentElement({
+        ...currentElement,
+        points: [...currentElement.points, pos]
+      });
+    } else if (tool === 'rectangle') {
+      setCurrentElement({
+        ...currentElement,
+        width: pos.x - currentElement.x1,
+        height: pos.y - currentElement.y1
+      });
+    } else {
+      setCurrentElement({
+        ...currentElement,
+        x2: pos.x,
+        y2: pos.y,
+        width: pos.x - currentElement.x1,
+        height: pos.y - currentElement.y1
+      });
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -841,30 +977,16 @@ export default function DrawingCanvas({ className, isActive = true, isEmbedded =
               tool === 'eraser' ? 'cursor-cell' : 
               'cursor-crosshair'
             }`}
+            style={{ touchAction: 'none' }}
             onClick={handleCanvasClick}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onTouchStart={handleCanvasTouchStart}
-            onTouchMove={(e) => {
-              e.preventDefault();
-              const touch = e.touches[0];
-              const mouseEvent = {
-                ...e,
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-              } as React.MouseEvent<HTMLCanvasElement>;
-              handleMouseMove(mouseEvent);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              handleMouseUp();
-            }}
-            onTouchCancel={(e) => {
-              e.preventDefault();
-              handleMouseUp();
-            }}
+            onTouchMove={handleCanvasTouchMove}
+            onTouchEnd={handleCanvasTouchEnd}
+            onTouchCancel={handleCanvasTouchCancel}
           />
           
           {/* Text Input Overlay */}
