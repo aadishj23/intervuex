@@ -81,20 +81,31 @@ function MeetingRoom() {
     console.log('Setting up custom event listener for interviewer');
 
     const handleCustomEvent = (event: any) => {
-      console.log('Custom event received by interviewer:', event);
+      console.log('🔔 Custom event received by interviewer:', event);
       console.log('Event type:', event.type);
       console.log('Event keys:', Object.keys(event));
+      console.log('Full event object:', JSON.stringify(event, null, 2));
       
       // Stream's custom events might have the data at the top level or nested
-      const eventType = event.type || event.event?.type;
-      const eventData = event.data || event.event || event;
+      // Try multiple possible structures
+      const eventType = event.type || event.event?.type || event.custom?.type;
+      const eventData = event.data || event.custom || event.event || event;
       
-      if (eventType === 'fullscreen_exit' || eventData?.type === 'fullscreen_exit') {
-        const exitCount = eventData.exitCount || event.exitCount || 0;
-        const userId = eventData.userId || event.userId || event.user?.id;
-        const userName = eventData.userName || event.userName || event.user?.name;
+      console.log('Parsed event type:', eventType);
+      console.log('Parsed event data:', eventData);
+      
+      // Check if this is a fullscreen exit event
+      const isFullscreenExit = 
+        eventType === 'fullscreen_exit' || 
+        eventData?.type === 'fullscreen_exit' ||
+        event?.custom?.type === 'fullscreen_exit';
+      
+      if (isFullscreenExit) {
+        const exitCount = eventData?.exitCount || event.exitCount || event.custom?.exitCount || 0;
+        const userId = eventData?.userId || event.userId || event.custom?.userId || event.user?.id;
+        const userName = eventData?.userName || event.userName || event.custom?.userName || event.user?.name;
         
-        console.log('Processing fullscreen exit:', { userId, userName, exitCount, eventData });
+        console.log('✅ Processing fullscreen exit:', { userId, userName, exitCount, eventData });
         
         // Get participant info from the call state as fallback
         const participants = call.state.participants || {};
@@ -106,11 +117,10 @@ function MeetingRoom() {
                                userId || 
                                'A candidate';
         
-        console.log('Fullscreen exit event processed:', {
+        console.log('📢 Showing toast for:', {
           userId,
           participantName,
           exitCount,
-          participant,
         });
         
         // Update the exit events map
@@ -128,13 +138,32 @@ function MeetingRoom() {
             icon: <AlertTriangle className="h-5 w-5" />
           }
         );
+        
+        console.log('✅ Toast notification displayed');
+      } else {
+        console.log('⚠️ Event is not a fullscreen_exit event, ignoring');
       }
     };
 
     // Listen for custom events
+    // Stream uses 'custom' event type for custom events
     call.on('custom', handleCustomEvent);
     
-    console.log('Custom event listener registered for interviewer');
+    // Also try listening to 'call.custom' if that's the correct event name
+    // Some Stream SDK versions use different event names
+    const handleCallCustom = (event: any) => {
+      console.log('🔔 Call custom event received (alternative):', event);
+      handleCustomEvent(event);
+    };
+    
+    // Try alternative event names
+    if (call.on && typeof call.on === 'function') {
+      // Check if there are other event types we should listen to
+      console.log('Available call methods:', Object.keys(call).filter(k => typeof (call as any)[k] === 'function'));
+    }
+    
+    console.log('✅ Custom event listener registered for interviewer');
+    console.log('Call object:', { id: call.id, state: call.state });
 
     return () => {
       call.off('custom', handleCustomEvent);

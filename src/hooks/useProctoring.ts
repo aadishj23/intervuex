@@ -268,7 +268,7 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
       console.log('Sending fullscreen exit event:', { userId, userName, exitCount });
       
       // Send custom event through Stream's sendCustomEvent
-      // Stream expects the event in a specific format
+      // Stream's sendCustomEvent accepts an object that will be sent to all participants
       const customEvent = {
         type: 'fullscreen_exit',
         exitCount,
@@ -277,11 +277,20 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
         userName,
       };
       
-      console.log('Sending custom event with payload:', customEvent);
+      console.log('📤 Sending fullscreen exit event:', customEvent);
+      console.log('Call state:', { callId: call.id, participants: Object.keys(call.state.participants || {}) });
       
-      await call.sendCustomEvent(customEvent);
-      
-      console.log('Fullscreen exit event sent successfully');
+      try {
+        await call.sendCustomEvent(customEvent);
+        console.log('✅ Fullscreen exit event sent successfully');
+      } catch (sendError: any) {
+        console.error('❌ Error sending custom event:', sendError);
+        console.error('Error details:', {
+          message: sendError.message,
+          stack: sendError.stack,
+          error: sendError
+        });
+      }
     } catch (error) {
       console.error("Error sending fullscreen exit event:", error);
     }
@@ -382,6 +391,79 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
       call.off('custom', handleCustomEvent);
     };
   }, [call]);
+
+  // Continuously monitor for display changes
+  useEffect(() => {
+    if (!enabled) return;
+
+    let screenDetails: any = null;
+    let checkInterval: NodeJS.Timeout | null = null;
+
+    // Initial detection
+    detectScreens();
+
+    // Try to use Window Management API for real-time monitoring
+    const setupScreenMonitoring = async () => {
+      if ('getScreenDetails' in window) {
+        try {
+          // @ts-ignore
+          screenDetails = await window.getScreenDetails();
+          
+          // Listen for screen changes
+          if (screenDetails && 'addEventListener' in screenDetails) {
+            const handleScreensChange = () => {
+              console.log('🖥️ Screen configuration changed - re-detecting screens');
+              detectScreens();
+            };
+            
+            screenDetails.addEventListener('screenschange', handleScreensChange);
+            
+            return () => {
+              if (screenDetails && 'removeEventListener' in screenDetails) {
+                screenDetails.removeEventListener('screenschange', handleScreensChange);
+              }
+            };
+          }
+        } catch (error) {
+          console.log('Could not set up Window Management API monitoring:', error);
+        }
+      }
+    };
+
+    // Set up monitoring
+    const cleanupScreenMonitoring = setupScreenMonitoring();
+
+    // Fallback: Periodic check for screen changes (every 5 seconds)
+    checkInterval = setInterval(() => {
+      console.log('🔄 Periodic screen check');
+      detectScreens();
+    }, 5000);
+
+    // Also listen for window resize events (might indicate display changes)
+    const handleResize = () => {
+      // Debounce resize events
+      clearTimeout((handleResize as any).timeout);
+      (handleResize as any).timeout = setTimeout(() => {
+        console.log('📐 Window resized - checking for display changes');
+        detectScreens();
+      }, 1000);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      if (cleanupScreenMonitoring) {
+        cleanupScreenMonitoring.then(cleanup => cleanup && cleanup());
+      }
+      window.removeEventListener('resize', handleResize);
+      if ((handleResize as any).timeout) {
+        clearTimeout((handleResize as any).timeout);
+      }
+    };
+  }, [enabled, detectScreens]);
 
   return {
     ...state,
