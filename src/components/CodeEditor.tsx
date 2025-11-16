@@ -209,7 +209,7 @@ function CodeEditor() {
                         value={selectedQuestion.id}
                         onValueChange={handleQuestionChange}
                       >
-                        <SelectTrigger className="w-full sm:w-[200px]">
+                        <SelectTrigger className="w-full sm:w-[200px] relative sm:static justify-center sm:justify-between [&>span]:text-center sm:[&>span]:text-left [&>svg]:absolute [&>svg]:right-3 sm:[&>svg]:relative sm:[&>svg]:right-0">
                           <SelectValue placeholder="Select question" />
                         </SelectTrigger>
                         <SelectContent>
