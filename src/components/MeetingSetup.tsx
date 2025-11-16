@@ -19,14 +19,58 @@ function MeetingSetup({ onSetupComplete }: { onSetupComplete: () => void }) {
   if (!call) return null;
 
   useEffect(() => {
-    if (isCameraDisabled) call.camera.disable();
-    else call.camera.enable();
-  }, [isCameraDisabled, call.camera]);
+    if (!call) return;
+    
+    const toggleCamera = async () => {
+      try {
+        // Check if call is still active before toggling
+        const callingState = call.state.callingState;
+        if (callingState !== 'joined' && callingState !== 'ringing') {
+          console.warn("Cannot toggle camera - call not in active state:", callingState);
+          return;
+        }
+        
+        if (isCameraDisabled) {
+          await call.camera.disable();
+        } else {
+          await call.camera.enable();
+        }
+      } catch (error) {
+        console.error("Error toggling camera:", error);
+        // Revert state on error
+        setIsCameraDisabled(!isCameraDisabled);
+      }
+    };
+
+    toggleCamera();
+  }, [isCameraDisabled, call]);
 
   useEffect(() => {
-    if (isMicDisabled) call.microphone.disable();
-    else call.microphone.enable();
-  }, [isMicDisabled, call.microphone]);
+    if (!call) return;
+    
+    const toggleMic = async () => {
+      try {
+        // Check if call is still active before toggling
+        const callingState = call.state.callingState;
+        if (callingState !== 'joined' && callingState !== 'ringing') {
+          console.warn("Cannot toggle microphone - call not in active state:", callingState);
+          return;
+        }
+        
+        if (isMicDisabled) {
+          await call.microphone.disable();
+        } else {
+          await call.microphone.enable();
+        }
+      } catch (error) {
+        console.error("Error toggling microphone:", error);
+        // Revert state on error
+        setIsMicDisabled(!isMicDisabled);
+      }
+    };
+
+    toggleMic();
+  }, [isMicDisabled, call]);
 
   // Detect screens on mount for candidates
   useEffect(() => {

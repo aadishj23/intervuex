@@ -13,7 +13,8 @@ const StreamVideoProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isLoaded || !user) return;
 
-    const client = new StreamVideoClient({
+    // Use getOrCreateInstance to prevent duplicate client instances
+    const client = StreamVideoClient.getOrCreateInstance({
       apiKey: process.env.NEXT_PUBLIC_STREAM_API_KEY!,
       user: {
         id: user?.id,
