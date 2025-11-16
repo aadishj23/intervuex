@@ -12,10 +12,8 @@ export default function MobileVideoCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Filter out participants without video/audio tracks
-  const activeParticipants = participants.filter(
-    (p) => p.hasVideo || p.hasAudio || p.isLocalParticipant
-  );
+  // Show all participants (they may have video, audio, or both)
+  const activeParticipants = participants;
 
   useEffect(() => {
     // Reset to first participant if current index is out of bounds
