@@ -75,14 +75,35 @@ function MeetingRoom() {
     if (!call || !isInterviewer) return;
 
     const handleCustomEvent = (event: any) => {
+      console.log('Custom event received:', event);
+      
       if (event.type === 'fullscreen_exit') {
-        const participantName = event.user?.name || 'A participant';
         const exitCount = event.data?.exitCount || 0;
+        const userId = event.data?.userId || event.userId || event.user?.id;
+        const userName = event.data?.userName || event.user?.name;
+        
+        // Get participant info from the call state as fallback
+        const participants = call.state.participants || {};
+        const participant = Object.values(participants).find((p: any) => p.userId === userId);
+        const participantName = userName || 
+                               participant?.user?.name || 
+                               event.user?.name || 
+                               participant?.user?.id || 
+                               userId || 
+                               'A participant';
+        
+        console.log('Fullscreen exit event processed:', {
+          userId,
+          participantName,
+          exitCount,
+          eventData: event.data,
+          participant,
+        });
         
         // Update the exit events map
         setFullscreenExitEvents(prev => {
           const newMap = new Map(prev);
-          newMap.set(event.user?.id || 'unknown', exitCount);
+          newMap.set(userId || 'unknown', exitCount);
           return newMap;
         });
 

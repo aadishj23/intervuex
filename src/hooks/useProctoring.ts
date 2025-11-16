@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useCall } from "@stream-io/video-react-sdk";
+import { useCall, useCallStateHooks } from "@stream-io/video-react-sdk";
 import toast from "react-hot-toast";
 
 /**
@@ -41,6 +41,8 @@ interface UseProctoringOptions {
 
 export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOptions = { enabled: true }) => {
   const call = useCall();
+  const { useLocalParticipant } = useCallStateHooks();
+  const localParticipant = useLocalParticipant();
   const [state, setState] = useState<ProctoringState>({
     isFullscreen: false,
     screenCount: 1,
@@ -259,18 +261,28 @@ export const useProctoring = ({ enabled, onFullscreenExit }: UseProctoringOption
     if (!call) return;
     
     try {
+      // Get user info from local participant
+      const userId = localParticipant?.userId || call.state.localParticipant?.userId;
+      const userName = localParticipant?.name || call.state.localParticipant?.name || 'A participant';
+      
+      console.log('Sending fullscreen exit event:', { userId, userName, exitCount });
+      
       // Send custom event through Stream's sendCustomEvent
       await call.sendCustomEvent({
         type: 'fullscreen_exit',
         data: {
           exitCount,
           timestamp: Date.now(),
+          userId,
+          userName,
         },
       });
+      
+      console.log('Fullscreen exit event sent successfully');
     } catch (error) {
       console.error("Error sending fullscreen exit event:", error);
     }
-  }, [call]);
+  }, [call, localParticipant]);
 
   // Handle fullscreen change
   useEffect(() => {
