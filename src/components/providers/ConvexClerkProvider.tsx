@@ -55,9 +55,11 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
     <ClerkProvider 
       key={mounted ? (isDark ? "dark" : "light") : "light"}
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      appearance={{
-        baseTheme: isDark ? "dark" : "light",
-      }}
+      appearance={
+        isDark 
+          ? ({ baseTheme: "dark" } as any)
+          : ({ baseTheme: "light" } as any)
+      }
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <UserSync>
