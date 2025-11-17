@@ -38,7 +38,9 @@ function UserSync({ children }: { children: React.ReactNode }) {
           clerkId: user.id,
           image: user.imageUrl,
         });
-      } catch {}
+      } catch (error) {
+        console.error("Error syncing user:", error);
+      }
     };
     run();
   }, [isSignedIn, user, syncUser]);

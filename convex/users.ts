@@ -30,11 +30,15 @@ export const updateUserRole = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("User is not authenticated");
+    if (!identity) {
+      console.error("updateUserRole: User is not authenticated");
+      throw new Error("User is not authenticated");
+    }
 
     // Only allow users to update their own role (or extend with admin check)
     if (identity.subject !== args.clerkId) {
-      throw new Error("Forbidden");
+      console.error("updateUserRole: Forbidden - identity.subject:", identity.subject, "args.clerkId:", args.clerkId);
+      throw new Error("Forbidden: You can only update your own role");
     }
 
     const user = await ctx.db
@@ -42,7 +46,17 @@ export const updateUserRole = mutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .first();
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      console.error("updateUserRole: User not found for clerkId:", args.clerkId);
+      // Try to create the user if they don't exist (they should have been synced, but just in case)
+      const newUser = await ctx.db.insert("users", {
+        clerkId: args.clerkId,
+        name: identity.name || identity.email || args.clerkId,
+        email: identity.email || "",
+        role: args.role,
+      });
+      return { ok: true, created: true };
+    }
 
     await ctx.db.patch(user._id, { role: args.role });
     return { ok: true };

@@ -19,6 +19,7 @@ function RoleChooser() {
     clerkId: user?.id || "",
   });
   const updateRole = useMutation(api.users.updateUserRole);
+  const syncUser = useMutation(api.users.syncUser);
 
   useEffect(() => {
     if (!isSignedIn || !user) return;
@@ -33,13 +34,30 @@ function RoleChooser() {
   const handleSave = async () => {
     if (!user) return;
     try {
+      // Ensure user is synced first (in case they don't exist yet)
+      if (!currentUser) {
+        try {
+          await syncUser({
+            name: user.fullName || user.username || user.id,
+            email: user.primaryEmailAddress?.emailAddress || "",
+            clerkId: user.id,
+            image: user.imageUrl,
+          });
+        } catch (syncError) {
+          // User might already exist, that's okay
+          console.log("User sync result:", syncError);
+        }
+      }
+      
       await updateRole({ clerkId: user.id, role });
       setOpen(false);
       toast.success(`Welcome! You're registered as a ${role}`);
       // Reload to ensure all UI updates with the new role
       window.location.reload();
-    } catch (e) {
-      toast.error("Failed to set role");
+    } catch (e: any) {
+      console.error("Error updating role:", e);
+      const errorMessage = e?.message || "Failed to set role. Please try again.";
+      toast.error(errorMessage);
     }
   };
 
