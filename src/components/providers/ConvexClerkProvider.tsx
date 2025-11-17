@@ -3,7 +3,7 @@
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
@@ -11,8 +11,54 @@ import { useUser } from "@clerk/nextjs";
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
+  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Check initial theme
+    const checkTheme = () => {
+      const html = document.documentElement;
+      const isDarkMode = html.classList.contains("dark");
+      setIsDark(isDarkMode);
+    };
+
+    // Check on mount
+    checkTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    // Also listen to system theme changes
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleSystemThemeChange = () => {
+      // Only update if theme is set to "system"
+      const html = document.documentElement;
+      if (!html.classList.contains("dark") && !html.classList.contains("light")) {
+        checkTheme();
+      }
+    };
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+    };
+  }, []);
+
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider 
+      key={mounted ? (isDark ? "dark" : "light") : "light"}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        baseTheme: isDark ? "dark" : "light",
+      }}
+    >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <UserSync>
           {children}
