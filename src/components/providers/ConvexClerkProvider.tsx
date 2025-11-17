@@ -1,6 +1,7 @@
 "use client";
 
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useEffect, useState } from "react";
@@ -21,14 +22,18 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
     const checkTheme = () => {
       const html = document.documentElement;
       const isDarkMode = html.classList.contains("dark");
-      setIsDark(isDarkMode);
+      if (isDarkMode !== isDark) {
+        setIsDark(isDarkMode);
+      }
     };
 
     // Check on mount
     checkTheme();
 
     // Watch for theme changes
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(() => {
+      checkTheme();
+    });
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
@@ -37,11 +42,7 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
     // Also listen to system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = () => {
-      // Only update if theme is set to "system"
-      const html = document.documentElement;
-      if (!html.classList.contains("dark") && !html.classList.contains("light")) {
-        checkTheme();
-      }
+      checkTheme();
     };
     mediaQuery.addEventListener("change", handleSystemThemeChange);
 
@@ -49,16 +50,16 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
       observer.disconnect();
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <ClerkProvider 
       key={mounted ? (isDark ? "dark" : "light") : "light"}
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       appearance={
-        isDark 
-          ? ({ baseTheme: "dark" } as any)
-          : ({ baseTheme: "light" } as any)
+        mounted && isDark 
+          ? { baseTheme: dark }
+          : undefined
       }
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
