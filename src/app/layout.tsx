@@ -23,6 +23,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "IntervueX",
   description: "IntervueX is an all-in-one, role-aware technical interview platform. Schedule and host video interviews, collaborate live in a shared code editor with multi-language runtime and outputs, capture decisions and comments, and manage candidates and results in one streamlined, secure workflow.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
