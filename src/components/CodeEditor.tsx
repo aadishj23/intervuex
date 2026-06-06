@@ -108,30 +108,13 @@ function CodeEditor() {
     setIsRunning(true);
     setOutput("");
     try {
-      const langMap: Record<string, { language: string; version: string; wrapper?: (code: string) => string }> = {
-        javascript: { language: "javascript", version: "18.15.0" },
-        typescript: { language: "typescript", version: "5.0.3" },
-        python: { language: "python", version: "3.10.0" },
-        java: { language: "java", version: "15.0.2" },
-        cpp: { language: "cpp", version: "10.2.0" },
-        go: { language: "go", version: "1.20.2" },
-      };
-      const runtime = langMap[language];
-      const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+      const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language: runtime.language,
-          version: runtime.version,
-          files: [{ content: code }],
-        }),
+        body: JSON.stringify({ language, code }),
       });
       const data = await res.json();
-      const out =
-        data?.run?.output ||
-        [data?.run?.stdout, data?.run?.stderr, data?.compile?.stderr, data?.message]
-          .filter(Boolean)
-          .join("\n");
+      const out = data?.output;
       setOutput(out && out.trim().length > 0 ? out : "No output (print to stdout)");
     } catch (e: any) {
       setOutput(`Error: ${e?.message || e}`);
